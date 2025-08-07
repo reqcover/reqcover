@@ -1,0 +1,9 @@
+.User.mk
+.gradle
+.kotlin
+.private-token
+build
+kotlin-js-store/
+.DS_Store
+.idea
+local.properties

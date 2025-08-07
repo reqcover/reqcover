@@ -1,0 +1,73 @@
+openapi: 3.1.1
+info:
+  title: Example OpenAPI Requirements
+  description: |
+    An example OpenAPI document to demonstrate requirements.
+    
+    ## Requirements Language
+    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all capitals, as shown here.
+  version: 1.0.0
+
+paths:
+  /api/version:
+    get:
+      summary: Get the version of this API
+      operationId: getVersion
+      responses:
+        '200':
+          description: Version information about this API
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+  /api/health:
+    get:
+      summary: Get the health status of this API
+      operationId: getHealth
+      responses:
+        '200':
+          description: Health is PASS
+          content:
+            application/health+json:
+              schema:
+                $ref: '#/components/schemas/Health'
+        '500':
+          description: Health is FAIL
+          x-requirements:
+            downstream: When the downstream service is unavailable, the health check MUST return a FAIL health response with a 500 status code.
+            database: When the database is unavailable, the health check MUST return a FAIL health response with a 500 status code.
+          content:
+            application/health+json:
+              schema:
+                $ref: '#/components/schemas/Health'
+
+components:
+  schemas:
+    Health:
+      type: object
+      description: Health information of the service
+      required: [status]
+      properties:
+        status:
+          type: string
+          description: |
+            Indicates whether the service status is acceptable or not.
+            Additional information beyond this schema MAY or MAY NOT be provided.
+            If additional information is provided, it MAY or MAY NOT comply with the upcoming health-check RFC.
+          enum:
+            - pass
+            - ok
+            - up
+            - fail
+            - error
+            - down
+            - warn
+    Version:
+      type: object
+      title: Version Information about the API
+      description: The version information of the service API and potentially more.
+      properties:
+        version:
+          type: string
+          description: |
+            The version of the API.

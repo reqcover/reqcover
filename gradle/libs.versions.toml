@@ -1,0 +1,26 @@
+[versions]
+algp = "8.12.0"
+axion-release = "1.19.1"
+jackson = "2.19.0"
+junit-jupiter = "5.13.4"
+junit-platform = "1.13.4"
+kotlin = "2.2.0"
+
+[libraries]
+jackson-dataformat-yaml = { group = "com.fasterxml.jackson.dataformat", name = "jackson-dataformat-yaml", version.ref = "jackson" }
+junit-jupiter-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit-jupiter" }
+junit-jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit-jupiter" }
+junit-jupiter-params = { group = "org.junit.jupiter", name = "junit-jupiter-params", version.ref = "junit-jupiter" }
+junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junit-platform" }
+junit-platform-suite = { group = "org.junit.platform", name = "junit-platform-suite", version.ref = "junit-platform" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+
+[bundles]
+junit = ["junit-jupiter-api", "junit-jupiter-params", "junit-platform-suite"]
+
+[plugins]
+android-library = { id = "com.android.library", version.ref = "algp" }
+axion-release = { id = "pl.allegro.tech.build.axion-release", version.ref = "axion-release" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
