@@ -19,10 +19,7 @@ class RequirementsCoverageListener : TestExecutionListener {
         if (testExecutionResult.status == TestExecutionResult.Status.SUCCESSFUL) {
             val source = testIdentifier.source.orElse(null)
             if (source is MethodSource) {
-                val clazz = Class.forName(source.className)
-                val method = clazz.getMethod(source.methodName)
-
-                val annotations = method.getAnnotationsByType(ForRequirement::class.java)
+                val annotations = source.javaMethod.getAnnotationsByType(ForRequirement::class.java)
                 for (annotation in annotations) {
                     tracker.verified(annotation.id)
                 }
