@@ -1,10 +1,19 @@
 package dev.reqcover.source.openapi
 
+import dev.reqcover.engine.RequirementsSource
 import dev.reqcover.engine.loadRequirements
+import java.util.ServiceLoader
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class OpenApiRequirementsSourceTest {
+    @Test
+    fun `ServiceLoader finds OpenApiRequirementsSource`() {
+        val implementations = ServiceLoader.load(RequirementsSource::class.java).toList()
+        assertTrue(implementations.any { it::class == OpenApiRequirementsSource::class })
+    }
+
     @Test
     fun `escapeJsonPointer escapes special characters for JSON Pointers`() {
         assertEquals("https:~1~1example.com~1~0user", escapeJsonPointer("https://example.com/~user"))
