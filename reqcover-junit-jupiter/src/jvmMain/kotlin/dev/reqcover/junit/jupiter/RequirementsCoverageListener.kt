@@ -15,19 +15,7 @@ class RequirementsCoverageListener : TestExecutionListener {
     private val tracker = RequirementsCoverageTracker()
     private val logger = LoggerFactory.getLogger(RequirementsCoverageListener::class.java)
 
-    override fun executionFinished(testIdentifier: TestIdentifier, testExecutionResult: TestExecutionResult) {
-        if (testExecutionResult.status == TestExecutionResult.Status.SUCCESSFUL) {
-            val source = testIdentifier.source.orElse(null)
-            if (source is MethodSource) {
-                val annotations = source.javaMethod.getAnnotationsByType(ForRequirement::class.java)
-                for (annotation in annotations) {
-                    tracker.verified(annotation.id)
-                }
-            }
-        }
-    }
-
-    override fun testPlanExecutionFinished(testPlan: TestPlan) {
+    override fun testPlanExecutionStarted(testPlan: TestPlan) {
         val config = testPlan.configurationParameters
         val requirementsUri = config.get("reqCover.requirementsUri").orElse(null)
         if (requirementsUri == null) {
@@ -41,7 +29,21 @@ This will enable ReqCover to check the requirements coverage against your requir
             return
         }
         loadRequirements(requirementsUri).forEach { tracker.expect(it) }
+    }
 
+    override fun executionFinished(testIdentifier: TestIdentifier, testExecutionResult: TestExecutionResult) {
+        if (testExecutionResult.status == TestExecutionResult.Status.SUCCESSFUL) {
+            val source = testIdentifier.source.orElse(null)
+            if (source is MethodSource) {
+                val annotations = source.javaMethod.getAnnotationsByType(ForRequirement::class.java)
+                for (annotation in annotations) {
+                    tracker.verified(annotation.id)
+                }
+            }
+        }
+    }
+
+    override fun testPlanExecutionFinished(testPlan: TestPlan) {
         if (tracker.unverifiedRequirements().isNotEmpty()) {
             logger.warn { "The following requirements were not covered by any test: ${tracker.unverifiedRequirements()}" }
         } else {
@@ -54,6 +56,8 @@ This will enable ReqCover to check the requirements coverage against your requir
 
         val coverage = (tracker.verifiedRequirements().size.toDouble() / tracker.expectedRequirements().size) * 100
         logger.info { "Requirements coverage: ${tracker.verifiedRequirements().size} out of ${tracker.expectedRequirements().size} = ${"%.1f".format(coverage)}%" }
+
+        val config = testPlan.configurationParameters
         val minimumRequiredCoveragePercent = config.get("reqCover.minimumRequiredCoveragePercent").map { it.toDoubleOrNull() ?: 0.0 }.orElse(0.0)
         if (coverage < minimumRequiredCoveragePercent) {
             logger.error { "Requirements coverage is below the minimum required coverage of $minimumRequiredCoveragePercent%. Actual coverage: ${"%.1f".format(coverage)}%" }
