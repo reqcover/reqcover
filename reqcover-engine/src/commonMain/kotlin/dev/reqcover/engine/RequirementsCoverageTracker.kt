@@ -8,6 +8,10 @@ class RequirementsCoverageTracker {
         expectedRequirements.add(string)
     }
 
+    fun expectAll(strings: Collection<String>) {
+        expectedRequirements.addAll(strings)
+    }
+
     fun isExpected(string: String): Boolean {
         return expectedRequirements.contains(string)
     }

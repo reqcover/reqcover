@@ -28,7 +28,7 @@ This will enable ReqCover to check the requirements coverage against your requir
             }
             return
         }
-        loadRequirements(requirementsUri).forEach { tracker.expect(it) }
+        tracker.expectAll(loadRequirements(requirementsUri))
     }
 
     override fun executionFinished(testIdentifier: TestIdentifier, testExecutionResult: TestExecutionResult) {
