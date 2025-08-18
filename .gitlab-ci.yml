@@ -1,0 +1,33 @@
+stages:
+  - build
+  - deploy
+
+clean:
+  stage: build
+  environment: staging
+  script:
+    - make clean
+  when: manual
+
+build:
+  stage: build
+  environment: staging
+  script:
+    - make
+
+stop-gradle:
+  stage: build
+  environment: staging
+  script:
+    - make stop-gradle
+  when: manual
+
+deploy:
+  stage: deploy
+  environment: production
+  script:
+    - make publish
+  dependencies:
+    - build
+  rules:
+    - if: $CI_COMMIT_TAG
