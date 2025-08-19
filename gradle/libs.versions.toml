@@ -1,6 +1,6 @@
 [versions]
 algp = "8.12.0"
-axion-release = "1.19.1"
+axion-release = "1.20.1"
 jackson = "2.19.0"
 junit-jupiter = "5.13.4"
 junit-platform = "1.13.4"
