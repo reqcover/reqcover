@@ -40,7 +40,7 @@ class GitLabPublishingPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         project.pluginManager.apply("maven-publish")
         project.extensions.getByType<PublishingExtension>().repositories {
-            maven("https://gitlabx.esol.de/api/v4/projects/61/packages/maven") {
+            maven("https://gitlabx.esol.de/api/v4/projects/85/packages/maven") {
                 name = "GitLab"
                 credentials(HttpHeaderCredentials::class.java) {
                     val jobToken = System.getenv("CI_JOB_TOKEN")
