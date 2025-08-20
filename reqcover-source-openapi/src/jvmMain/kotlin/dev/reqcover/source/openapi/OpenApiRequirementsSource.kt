@@ -2,7 +2,7 @@ package dev.reqcover.source.openapi
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
-import dev.reqcover.engine.RequirementsSource
+import dev.reqcover.engine.spi.RequirementsSource
 import kotlin.collections.component1
 import kotlin.collections.component2
 

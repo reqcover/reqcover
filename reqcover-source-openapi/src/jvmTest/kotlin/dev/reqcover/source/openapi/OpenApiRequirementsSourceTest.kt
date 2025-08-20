@@ -1,6 +1,6 @@
 package dev.reqcover.source.openapi
 
-import dev.reqcover.engine.RequirementsSource
+import dev.reqcover.engine.spi.RequirementsSource
 import dev.reqcover.engine.loadRequirements
 import java.util.ServiceLoader
 import kotlin.test.Test

@@ -1,4 +1,4 @@
-package dev.reqcover.engine
+package dev.reqcover.engine.spi
 
 interface RequirementsSource {
     /**
@@ -6,8 +6,8 @@ interface RequirementsSource {
      *
      * @param uri The URI from which to load requirements.
      * @return A set of requirement IDs loaded from the URI.
-     * @throws UnsupportedFormat If the format of the requirements is not supported.
-     * @throws NotFound If the requirements file cannot be found at the specified URI.
+     * @throws dev.reqcover.engine.UnsupportedFormat If the format of the requirements is not supported.
+     * @throws dev.reqcover.engine.NotFound If the requirements file cannot be found at the specified URI.
      */
     fun load(uri: String): Set<String>
 }

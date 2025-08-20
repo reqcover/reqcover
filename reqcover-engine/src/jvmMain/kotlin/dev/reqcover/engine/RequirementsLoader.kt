@@ -1,5 +1,6 @@
 package dev.reqcover.engine
 
+import dev.reqcover.engine.spi.RequirementsSource
 import java.util.ServiceLoader
 
 fun loadRequirements(uri: String): Set<String> {
