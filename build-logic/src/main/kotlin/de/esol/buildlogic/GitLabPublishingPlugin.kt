@@ -31,37 +31,31 @@ import org.gradle.authentication.http.HttpHeaderAuthentication
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.maven
-import java.io.File
-import kotlin.io.readText
 import kotlin.jvm.java
-import kotlin.text.trim
 
 class GitLabPublishingPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         project.pluginManager.apply("maven-publish")
         project.extensions.getByType<PublishingExtension>().repositories {
-            maven("https://gitlabx.esol.de/api/v4/projects/85/packages/maven") {
-                name = "GitLab"
-                credentials(HttpHeaderCredentials::class.java) {
-                    val jobToken = System.getenv("CI_JOB_TOKEN")
-                    val privateTokenFile = File(".private-token")
-                    val privateToken = System.getenv("GITLAB_TOKEN")
-                    if (jobToken != null) {
-                        this.name = "Job-Token"
-                        this.value = jobToken
-                    } else if (privateTokenFile.exists()) {
-                        this.name = "Private-Token"
-                        this.value = privateTokenFile.readText().trim()
-                    } else if (privateToken != null) {
-                        this.name = "Private-Token"
-                        this.value = privateToken
-                    } else {
-                        this.name = "Job-Token"
-                        this.value = ""
+            if (System.getenv("GITHUB_ACTIONS") != null) {
+                maven("https://maven.pkg.github.com/reqcover/reqcover") {
+                    name = "GitHub"
+                    credentials {
+                        username = System.getenv("GITHUB_ACTOR") ?: project.findProperty("github.username") as String?
+                        password = System.getenv("GITHUB_TOKEN") ?: project.findProperty("github.token") as String?
                     }
                 }
-                authentication {
-                    create<HttpHeaderAuthentication>("header")
+            }
+            if (System.getenv("GITLAB_CI") != null) {
+                maven("https://gitlabx.esol.de/api/v4/projects/85/packages/maven") {
+                    name = "GitLab"
+                    credentials(HttpHeaderCredentials::class.java) {
+                        name = "Job-Token"
+                        value = System.getenv("CI_JOB_TOKEN")
+                    }
+                    authentication {
+                        create<HttpHeaderAuthentication>("header")
+                    }
                 }
             }
         }
