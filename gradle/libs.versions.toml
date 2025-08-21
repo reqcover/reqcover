@@ -4,7 +4,7 @@ axion-release = "1.20.1"
 jackson = "2.19.0"
 junit-jupiter = "5.13.4"
 junit-platform = "1.13.4"
-kotlin = "2.2.0"
+kotlin = "2.2.10"
 
 [libraries]
 jackson-dataformat-yaml = { group = "com.fasterxml.jackson.dataformat", name = "jackson-dataformat-yaml", version.ref = "jackson" }
