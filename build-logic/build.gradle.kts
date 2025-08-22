@@ -11,9 +11,9 @@ repositories {
 
 gradlePlugin {
     plugins {
-        create("gitlabPublishing") {
-            id = "gitlab-publishing"
-            implementationClass = "de.esol.buildlogic.GitLabPublishingPlugin"
+        create("gitPublishing") {
+            id = "git-publishing"
+            implementationClass = "dev.reqcover.buildlogic.GitPublishingPlugin"
         }
     }
 }

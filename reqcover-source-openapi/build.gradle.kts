@@ -1,6 +1,6 @@
 plugins {
     kotlin("multiplatform")
-    id("gitlab-publishing")
+    id("git-publishing")
     alias(libs.plugins.kotlin.serialization)
 }
 
