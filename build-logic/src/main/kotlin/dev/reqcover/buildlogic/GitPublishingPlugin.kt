@@ -23,7 +23,9 @@ class GitPublishingPlugin : Plugin<Project> {
                 }
             }
             if (System.getenv("GITLAB_CI") != null) {
-                maven("https://gitlabx.esol.de/api/v4/projects/85/packages/maven") {
+                val baseUrl = System.getenv("CI_API_V4_URL")
+                val projectId = System.getenv("CI_PROJECT_ID")
+                maven("$baseUrl/projects/$projectId/packages/maven") {
                     name = "GitLab"
                     credentials(HttpHeaderCredentials::class.java) {
                         name = "Job-Token"
