@@ -3,6 +3,7 @@ package dev.reqcover.junit.jupiter
 import dev.reqcover.api.ForRequirement
 import dev.reqcover.engine.RequirementsCoverageTracker
 import dev.reqcover.engine.loadRequirements
+import dev.reqcover.engine.report
 import org.junit.platform.commons.logging.LoggerFactory
 import org.junit.platform.engine.TestExecutionResult
 import org.junit.platform.engine.support.descriptor.MethodSource
@@ -69,5 +70,6 @@ This will enable ReqCover to check the requirements coverage against your requir
         } else {
             logger.info { "Requirements coverage meets the minimum required coverage of $minimumRequiredCoveragePercent%. Actual coverage: ${"%.1f".format(coverage)}%" }
         }
+        report(tracker)
     }
 }

@@ -39,4 +39,8 @@ class RequirementsCoverageTracker {
     fun unexpectedRequirements(): Set<String> {
         return verifiedRequirements - expectedRequirements
     }
+
+    fun coveredRequirements() : Set<String> {
+        return verifiedRequirements intersect expectedRequirements
+    }
 }
