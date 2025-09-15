@@ -5,7 +5,7 @@ jackson = "2.19.2"
 junit-jupiter = "5.13.4"
 junit-platform = "1.13.4"
 kotlin = "2.2.10"
-xmlunit = "2.10.3"
+xmlunit = "2.10.4"
 
 [libraries]
 jackson-dataformat-yaml = { group = "com.fasterxml.jackson.dataformat", name = "jackson-dataformat-yaml", version.ref = "jackson" }
