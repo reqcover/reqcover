@@ -21,7 +21,7 @@ class XmlRequirementsCoverageReporter : RequirementsCoverageReporter {
 
     fun report(
         tracker: RequirementsCoverageTracker,
-        outputStream: OutputStream
+        outputStream: OutputStream,
     ): Boolean {
         val domImplementationLS = DOMImplementationRegistry.newInstance().getDOMImplementation("LS")
         if (domImplementationLS !is DOMImplementationLS) throw IllegalStateException("Could not get DOMImplementationLS")

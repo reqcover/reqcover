@@ -9,6 +9,7 @@ import java.io.ByteArrayOutputStream
 class XmlRequirementsCoverageReporterTest {
     private val reporter = XmlRequirementsCoverageReporter()
     private val tracker = RequirementsCoverageTracker()
+
     @Test
     fun emptyReport() {
         val expected = """
