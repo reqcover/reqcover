@@ -24,6 +24,7 @@ include(
     "reqcover-core",
     "reqcover-engine",
     "reqcover-junit-jupiter",
+    "reqcover-reporter-html",
     "reqcover-reporter-xml",
     "reqcover-source-openapi",
 )
