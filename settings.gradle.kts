@@ -23,6 +23,7 @@ rootProject.name = "reqcover-parent"
 include(
     "reqcover-core",
     "reqcover-engine",
+    "reqcover-engine:reqcover-engine-test-source1",
     "reqcover-junit-jupiter",
     "reqcover-reporter-html",
     "reqcover-reporter-xml",

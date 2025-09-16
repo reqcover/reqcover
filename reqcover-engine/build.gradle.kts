@@ -17,6 +17,9 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
+        jvmTest.dependencies {
+            implementation(project("reqcover-engine-test-source1"))
+        }
     }
 }
 

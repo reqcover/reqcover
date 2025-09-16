@@ -2,16 +2,14 @@ package dev.reqcover.source.openapi
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
-import dev.reqcover.engine.spi.RequirementsSource
+import dev.reqcover.engine.spi.JvmRequirementsSource
+import java.io.InputStream
 import kotlin.collections.component1
 import kotlin.collections.component2
 
-class OpenApiRequirementsSource : RequirementsSource {
-    override fun load(uri: String): Set<String> {
-        val resource = this::class.java.classLoader.getResource(uri)
-            ?: throw dev.reqcover.engine.NotFound(uri)
-        return loadOpenApiRequirements(YAMLMapper().readTree(resource.openStream()))
-    }
+class OpenApiRequirementsSource : JvmRequirementsSource {
+    override fun load(inputStream: InputStream): Set<String> =
+        loadOpenApiRequirements(YAMLMapper().readTree(inputStream))
 }
 
 fun loadOpenApiRequirementsFromString(yamlContent: String): Set<String> =
