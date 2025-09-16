@@ -19,17 +19,22 @@ class RequirementsCoverageListener : TestExecutionListener {
     override fun testPlanExecutionStarted(testPlan: TestPlan) {
         val config = testPlan.configurationParameters
         val requirementsUri = config.get("reqCover.requirementsUri").orElse(null)
-        if (requirementsUri == null) {
+        val requirementsUris = config.get("reqCover.requirementsUris").orElse(null)
+        if (requirementsUri == null && requirementsUris != null) {
             logger.warn {
                 """ReqCover is on the classpath, but no requirements specification has been provided.
 The recommended solution is to add the following line to your junit-platform.properties file:
-reqCover.requirementsUri=path/to/your/requirements
+reqCover.requirementsUris=path/to/your/requirements
 This will enable ReqCover to check the requirements coverage against your requirements specification.
 """
             }
             return
         }
-        tracker.expectAll(loadRequirements(requirementsUri))
+        if (requirementsUri != null)
+            tracker.expectAll(loadRequirements(requirementsUri))
+        if (requirementsUris != null)
+            for (uri in requirementsUris.split(",").map { it.trim() })
+                tracker.expectAll(loadRequirements(uri))
     }
 
     override fun executionFinished(testIdentifier: TestIdentifier, testExecutionResult: TestExecutionResult) {
