@@ -4,24 +4,24 @@ class RequirementsCoverageTracker {
     private val expectedRequirements = mutableSetOf<String>()
     private val verifiedRequirements = mutableSetOf<String>()
 
-    fun expect(string: String) {
-        expectedRequirements.add(string)
+    fun expect(requirementId: String) {
+        expectedRequirements.add(requirementId)
     }
 
-    fun expectAll(strings: Collection<String>) {
-        expectedRequirements.addAll(strings)
+    fun expectAll(requirementIds: Collection<String>) {
+        expectedRequirements.addAll(requirementIds)
     }
 
-    fun isExpected(string: String): Boolean {
-        return expectedRequirements.contains(string)
+    fun isExpected(requirementId: String): Boolean {
+        return expectedRequirements.contains(requirementId)
     }
 
-    fun verified(string: String) {
-        verifiedRequirements.add(string)
+    fun verified(requirementId: String) {
+        verifiedRequirements.add(requirementId)
     }
 
-    fun isVerified(string: String): Boolean {
-        return verifiedRequirements.contains(string)
+    fun isVerified(requirementId: String): Boolean {
+        return verifiedRequirements.contains(requirementId)
     }
 
     fun expectedRequirements(): Set<String> {
