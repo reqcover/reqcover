@@ -1,14 +1,14 @@
 [versions]
 algp = "8.13.0"
 axion-release = "1.21.0"
-jackson = "2.20.1"
+jackson = "3.0.1"
 junit-jupiter = "6.0.0"
 junit-platform = "6.0.0"
 kotlin = "2.2.21"
 xmlunit = "2.11.0"
 
 [libraries]
-jackson-dataformat-yaml = { group = "com.fasterxml.jackson.dataformat", name = "jackson-dataformat-yaml", version.ref = "jackson" }
+jackson-dataformat-yaml = { group = "tools.jackson.dataformat", name = "jackson-dataformat-yaml", version.ref = "jackson" }
 junit-jupiter-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit-jupiter" }
 junit-jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit-jupiter" }
 junit-jupiter-params = { group = "org.junit.jupiter", name = "junit-jupiter-params", version.ref = "junit-jupiter" }
