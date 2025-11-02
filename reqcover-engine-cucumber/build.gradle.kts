@@ -13,7 +13,8 @@ kotlin {
             api(project(":reqcover-engine"))
         }
         jvmMain.dependencies {
-            implementation(libs.junit.platform.launcher)
+            implementation(libs.cucumber.core)
+            implementation(libs.cucumber.java)
         }
         jvmTest.dependencies {
             implementation(project(":reqcover-source-openapi"))

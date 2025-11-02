@@ -24,7 +24,7 @@ include(
     "reqcover-core",
     "reqcover-engine",
     "reqcover-engine:reqcover-engine-test-source1",
-    "reqcover-junit-jupiter",
+    "reqcover-engine-cucumber",
     "reqcover-engine-junit-jupiter",
     "reqcover-engine-testng",
     "reqcover-reporter-html",
