@@ -3,7 +3,7 @@ algp = "8.13.0"
 axion-release = "1.21.0"
 jackson = "3.0.1"
 junit-jupiter = "6.0.0"
-junit-platform = "6.0.0"
+junit-platform = "6.0.1"
 kotlin = "2.2.21"
 xmlunit = "2.11.0"
 
