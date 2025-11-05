@@ -7,7 +7,6 @@ import io.cucumber.plugin.event.EventPublisher
 import io.cucumber.plugin.event.TestCaseFinished
 import io.cucumber.plugin.event.TestRunFinished
 import io.cucumber.plugin.event.TestRunStarted
-import jdk.jfr.internal.LogLevel
 import java.util.Properties
 import kotlin.system.exitProcess
 
