@@ -30,7 +30,7 @@ class RequirementsCoverageListener : IExecutionListener, IInvokedMethodListener 
         if (requirementsUri == null && requirementsUris == null) {
             logger.warn(
                 """ReqCover is on the classpath, but no requirements specification has been provided.
-The recommended solution is to add the following line to your junit-platform.properties file:
+The recommended solution is to add the following line to your testng.properties file:
 reqCover.requirementsUris=path/to/your/requirements
 This will enable ReqCover to check the requirements coverage against your requirements specification.
 """
