@@ -16,12 +16,12 @@ class OpenApiRequirementsSourceTest {
 
     @Test
     fun `escapeJsonPointer escapes special characters for JSON Pointers`() {
-        assertEquals("https:~1~1example.com~1~0user", escapeJsonPointer("https://example.com/~user"))
+        assertEquals("https:~1~1example.com~1~0user", OpenApiRequirementsSource().escapeJsonPointer("https://example.com/~user"))
     }
 
     @Test
     fun `an empty document has no requirements`() {
-        val requirements = loadOpenApiRequirementsFromString(
+        val requirements = OpenApiRequirementsSource().loadOpenApiRequirementsFromString(
             """
             openapi: 3.0.0
             info:
@@ -35,7 +35,7 @@ class OpenApiRequirementsSourceTest {
 
     @Test
     fun `given no responses, the operations are the requirements`() {
-        val requirements = loadOpenApiRequirementsFromString(
+        val requirements = OpenApiRequirementsSource().loadOpenApiRequirementsFromString(
             """
             openapi: 3.0.0
             info:
@@ -55,7 +55,7 @@ class OpenApiRequirementsSourceTest {
 
     @Test
     fun `given multiple response codes, the response codes are the requirements`() {
-        val requirements = loadOpenApiRequirementsFromString(
+        val requirements = OpenApiRequirementsSource().loadOpenApiRequirementsFromString(
             """
             openapi: 3.0.0
             info:
@@ -85,7 +85,7 @@ class OpenApiRequirementsSourceTest {
 
     @Test
     fun `given explicit requirements, those are the requirements`() {
-        val requirements = loadOpenApiRequirementsFromString(
+        val requirements = OpenApiRequirementsSource().loadOpenApiRequirementsFromString(
             """
             openapi: 3.0.0
             info:
