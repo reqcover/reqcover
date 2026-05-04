@@ -12,15 +12,18 @@ import org.junit.platform.launcher.TestIdentifier
 import org.junit.platform.launcher.TestPlan
 import kotlin.system.exitProcess
 
-class RequirementsCoverageListener : TestExecutionListener {
-    private val tracker = RequirementsCoverageTracker()
+class RequirementsCoverageListener @JvmOverloads constructor(
+    private val tracker: RequirementsCoverageTracker = RequirementsCoverageTracker(),
+    private val requirementsCoverageReporter: (RequirementsCoverageTracker) -> Unit = ::report,
+    private val failBuild: () -> Unit = { exitProcess(1) },
+) : TestExecutionListener {
     private val logger = LoggerFactory.getLogger(RequirementsCoverageListener::class.java)
 
     override fun testPlanExecutionStarted(testPlan: TestPlan) {
         val config = testPlan.configurationParameters
         val requirementsUri = config.get("reqCover.requirementsUri").orElse(null)
         val requirementsUris = config.get("reqCover.requirementsUris").orElse(null)
-        if (requirementsUri == null && requirementsUris != null) {
+        if (requirementsUri == null && requirementsUris == null) {
             logger.warn {
                 """ReqCover is on the classpath, but no requirements specification has been provided.
 The recommended solution is to add the following line to your junit-platform.properties file:
@@ -60,8 +63,14 @@ This will enable ReqCover to check the requirements coverage against your requir
             logger.warn { "The following covered requirements are not defined in the requirements specification: ${tracker.unexpectedRequirements()}" }
         }
 
-        val coverage = (tracker.verifiedRequirements().size.toDouble() / tracker.expectedRequirements().size) * 100
-        logger.info { "Requirements coverage: ${tracker.verifiedRequirements().size} out of ${tracker.expectedRequirements().size} = ${"%.1f".format(coverage)}%" }
+        val coveredRequirements = tracker.coveredRequirements().size
+        val expectedRequirements = tracker.expectedRequirements().size
+        val coverage = if (expectedRequirements == 0) {
+            100.0
+        } else {
+            (coveredRequirements.toDouble() / expectedRequirements) * 100
+        }
+        logger.info { "Requirements coverage: $coveredRequirements out of $expectedRequirements = ${"%.1f".format(coverage)}%" }
 
         val config = testPlan.configurationParameters
         val minimumRequiredCoveragePercent = config.get("reqCover.minimumRequiredCoveragePercent").map { it.toDoubleOrNull() ?: 0.0 }.orElse(0.0)
@@ -70,11 +79,11 @@ This will enable ReqCover to check the requirements coverage against your requir
             val failIfBelowMinimum = config.get("reqCover.failIfBelowMinimum").map { it.toBoolean() }.orElse(true)
             if (failIfBelowMinimum) {
                 logger.error { "Exiting with error code 1 due to insufficient requirements coverage." }
-                exitProcess(1)
+                failBuild()
             }
         } else {
             logger.info { "Requirements coverage meets the minimum required coverage of $minimumRequiredCoveragePercent%. Actual coverage: ${"%.1f".format(coverage)}%" }
         }
-        report(tracker)
+        requirementsCoverageReporter(tracker)
     }
 }
