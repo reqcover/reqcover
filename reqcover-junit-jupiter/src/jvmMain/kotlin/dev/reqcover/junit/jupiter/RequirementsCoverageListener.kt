@@ -21,9 +21,17 @@ class RequirementsCoverageListener @JvmOverloads constructor(
 
     override fun testPlanExecutionStarted(testPlan: TestPlan) {
         val config = testPlan.configurationParameters
-        val requirementsUri = config.get("reqCover.requirementsUri").orElse(null)
+        val removedRequirementsUri = config.get("reqCover.requirementsUri").orElse(null)
+        if (removedRequirementsUri != null) {
+            logger.error {
+                "The reqCover.requirementsUri configuration parameter has been removed. " +
+                    "Use reqCover.requirementsUris instead."
+            }
+            failBuild()
+            return
+        }
         val requirementsUris = config.get("reqCover.requirementsUris").orElse(null)
-        if (requirementsUri == null && requirementsUris == null) {
+        if (requirementsUris == null) {
             logger.warn {
                 """ReqCover is on the classpath, but no requirements specification has been provided.
 The recommended solution is to add the following line to your junit-platform.properties file:
@@ -33,11 +41,8 @@ This will enable ReqCover to check the requirements coverage against your requir
             }
             return
         }
-        if (requirementsUri != null)
-            tracker.expectAll(loadRequirements(requirementsUri))
-        if (requirementsUris != null)
-            for (uri in requirementsUris.split(",").map { it.trim() })
-                tracker.expectAll(loadRequirements(uri))
+        for (uri in requirementsUris.split(",").map { it.trim() }.filter { it.isNotEmpty() })
+            tracker.expectAll(loadRequirements(uri))
     }
 
     override fun executionFinished(testIdentifier: TestIdentifier, testExecutionResult: TestExecutionResult) {
