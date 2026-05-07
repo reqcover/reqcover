@@ -1,0 +1,13 @@
+' Shared status colors for Nelkinda PlantUML diagrams.
+
+' hsl(120, 100%, 95%)
+!define STATUS_IMPLEMENTED_COLOR #E6FFE6
+
+' hsl(45, 100%, 90%)
+!define STATUS_APPROVED_COLOR #FFF4CC
+
+' hsl(210, 100%, 93%)
+!define STATUS_PROPOSED_COLOR #DDEBFF
+
+' hsl(0, 100%, 92%)
+!define STATUS_DEPRECATED_COLOR #FFD6D6

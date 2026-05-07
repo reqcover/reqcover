@@ -1,0 +1,11 @@
+' Shared status legend for Nelkinda PlantUML diagrams.
+
+!include status-styles.puml
+
+legend right
+|= Marker |= Meaning |
+|<STATUS_PROPOSED_COLOR> <<proposed>> | Proposed / under consideration |
+|<STATUS_APPROVED_COLOR> <<approved>> | Approved / not yet implemented |
+|<STATUS_IMPLEMENTED_COLOR> <<implemented>> | Implemented and current |
+|<STATUS_DEPRECATED_COLOR> <<deprecated>> | Deprecated / avoid for new work |
+endlegend

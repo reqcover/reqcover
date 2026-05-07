@@ -1,0 +1,45 @@
+' Shared status styles for Nelkinda PlantUML diagrams.
+
+!include_once colors.iuml
+
+skinparam class {
+    BackgroundColor<<implemented>> STATUS_IMPLEMENTED_COLOR
+    BackgroundColor<<approved>> STATUS_APPROVED_COLOR
+    BackgroundColor<<proposed>> STATUS_PROPOSED_COLOR
+    BackgroundColor<<deprecated>> STATUS_DEPRECATED_COLOR
+}
+
+skinparam interface {
+    BackgroundColor<<implemented>> STATUS_IMPLEMENTED_COLOR
+    BackgroundColor<<approved>> STATUS_APPROVED_COLOR
+    BackgroundColor<<proposed>> STATUS_PROPOSED_COLOR
+    BackgroundColor<<deprecated>> STATUS_DEPRECATED_COLOR
+}
+
+skinparam component {
+    BackgroundColor<<implemented>> STATUS_IMPLEMENTED_COLOR
+    BackgroundColor<<approved>> STATUS_APPROVED_COLOR
+    BackgroundColor<<proposed>> STATUS_PROPOSED_COLOR
+    BackgroundColor<<deprecated>> STATUS_DEPRECATED_COLOR
+}
+
+skinparam package {
+    BackgroundColor<<implemented>> STATUS_IMPLEMENTED_COLOR
+    BackgroundColor<<approved>> STATUS_APPROVED_COLOR
+    BackgroundColor<<proposed>> STATUS_PROPOSED_COLOR
+    BackgroundColor<<deprecated>> STATUS_DEPRECATED_COLOR
+}
+
+skinparam rectangle {
+    BackgroundColor<<implemented>> STATUS_IMPLEMENTED_COLOR
+    BackgroundColor<<approved>> STATUS_APPROVED_COLOR
+    BackgroundColor<<proposed>> STATUS_PROPOSED_COLOR
+    BackgroundColor<<deprecated>> STATUS_DEPRECATED_COLOR
+}
+
+skinparam usecase {
+    BackgroundColor<<implemented>> STATUS_IMPLEMENTED_COLOR
+    BackgroundColor<<approved>> STATUS_APPROVED_COLOR
+    BackgroundColor<<proposed>> STATUS_PROPOSED_COLOR
+    BackgroundColor<<deprecated>> STATUS_DEPRECATED_COLOR
+}
