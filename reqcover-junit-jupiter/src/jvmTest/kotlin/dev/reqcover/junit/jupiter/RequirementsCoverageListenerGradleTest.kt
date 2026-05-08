@@ -10,11 +10,13 @@ import java.util.Properties
 import kotlin.streams.toList
 
 class RequirementsCoverageListenerGradleTest {
+    private val fixtureDirectory = repositoryRoot()
+        .resolve("reqcover-junit-jupiter/src/jvmTest/fixtures/legacy-config-check")
+
     @Test
     fun `fails the Gradle test task when reqCover requirementsUri is configured`() {
         val projectDir = Files.createTempDirectory("reqcover-gradle-test")
-        writeFixtureBuild(projectDir)
-        writeFixtureSources(projectDir)
+        copyFixtureProject(projectDir)
 
         val result = runGradleBuildAndFail(projectDir)
 
@@ -48,76 +50,27 @@ class RequirementsCoverageListenerGradleTest {
             BuildFailureResult(output = output)
         }
 
-    private fun writeFixtureBuild(projectDir: Path) {
-        writeFile(
-            projectDir.resolve("settings.gradle.kts"),
-            "rootProject.name = \"reqcover-deprecated-config-fixture\"\n"
-        )
-        writeFile(
-            projectDir.resolve("build.gradle.kts"),
-            """
-            plugins {
-                java
-            }
-
-            dependencies {
-                implementation(files(
-                    ${fixtureClasspathEntries().joinToString(",\n                    ") { "\"$it\"" }}
-                ))
-            }
-
-            tasks.register<JavaExec>("legacyConfigCheck") {
-                classpath = sourceSets["main"].runtimeClasspath
-                mainClass = "example.LegacyConfigMain"
-            }
-            """.trimIndent()
-        )
-    }
-
-    private fun writeFixtureSources(projectDir: Path) {
-        writeFile(
-            projectDir.resolve("src/main/java/example/LegacyRequirementsPropertyTest.java"),
-            """
-            package example;
-
-            import dev.reqcover.api.ForRequirement;
-            import org.junit.jupiter.api.Test;
-
-            class LegacyRequirementsPropertyTest {
-                @Test
-                @ForRequirement(id = "#reqOne")
-                void verifiesRequirement() {
+    private fun copyFixtureProject(projectDir: Path) {
+        Files.walk(fixtureDirectory).use { paths ->
+            paths.forEach { source ->
+                val relativePath = fixtureDirectory.relativize(source)
+                val target = projectDir.resolve(relativePath.toString())
+                if (Files.isDirectory(source)) {
+                    Files.createDirectories(target)
+                } else {
+                    Files.createDirectories(target.parent)
+                    Files.copy(source, target)
                 }
             }
-            """.trimIndent()
+        }
+        val buildFile = projectDir.resolve("build.gradle.kts")
+        Files.writeString(
+            buildFile,
+            Files.readString(buildFile).replace(
+                "__REQCOVER_TEST_CLASSPATH__",
+                fixtureClasspathEntries().joinToString(",\n        ") { "\"$it\"" },
+            ),
         )
-        writeFile(
-            projectDir.resolve("src/main/java/example/LegacyConfigMain.java"),
-            """
-            package example;
-
-            import dev.reqcover.junit.jupiter.RequirementsCoverageListener;
-            import org.junit.platform.engine.discovery.DiscoverySelectors;
-            import org.junit.platform.launcher.LauncherDiscoveryRequest;
-            import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
-            import org.junit.platform.launcher.core.LauncherFactory;
-
-            public class LegacyConfigMain {
-                public static void main(String[] args) {
-                    LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
-                        .selectors(DiscoverySelectors.selectClass(LegacyRequirementsPropertyTest.class))
-                        .configurationParameter("reqCover.requirementsUri", "requirements-a.yaml")
-                        .build();
-                    LauncherFactory.create().execute(request, new RequirementsCoverageListener());
-                }
-            }
-            """.trimIndent()
-        )
-    }
-
-    private fun writeFile(path: Path, content: String) {
-        Files.createDirectories(path.parent)
-        Files.writeString(path, content)
     }
 
     private val gradleTestKitClassLoader: URLClassLoader by lazy {
