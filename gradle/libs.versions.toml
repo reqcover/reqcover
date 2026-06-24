@@ -1,7 +1,7 @@
 [versions]
 algp = "8.13.1"
 axion-release = "1.21.1"
-jackson = "3.0.2"
+jackson = "3.2.0"
 junit-jupiter = "6.1.0"
 junit-platform = "6.0.1"
 kotlin = "2.4.0"
