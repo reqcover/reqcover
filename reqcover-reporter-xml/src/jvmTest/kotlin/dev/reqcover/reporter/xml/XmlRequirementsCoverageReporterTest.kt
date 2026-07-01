@@ -1,7 +1,6 @@
-package dev.reqciver.reporter.xml
+package dev.reqcover.reporter.xml
 
 import dev.reqcover.engine.RequirementsCoverageTracker
-import dev.reqcover.reporter.xml.XmlRequirementsCoverageReporter
 import org.junit.jupiter.api.Test
 import org.xmlunit.assertj.XmlAssert.assertThat
 import java.io.ByteArrayOutputStream
