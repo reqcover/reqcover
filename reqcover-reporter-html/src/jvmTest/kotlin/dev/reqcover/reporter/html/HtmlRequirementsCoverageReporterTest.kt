@@ -2,12 +2,18 @@ package dev.reqcover.reporter.html
 
 import dev.reqcover.engine.RequirementsCoverageTracker
 import org.junit.jupiter.api.Test
+import org.xmlunit.assertj.XmlAssert
 import org.xmlunit.assertj.XmlAssert.assertThat
 import java.io.ByteArrayOutputStream
 
 class HtmlRequirementsCoverageReporterTest {
     private val reporter = HtmlRequirementsCoverageReporter()
     private val tracker = RequirementsCoverageTracker()
+
+    private val dbf = javax.xml.parsers.DocumentBuilderFactory.newInstance().apply {
+        // Re-enable DOCTYPE parsing
+        setFeature("http://apache.org/xml/features/disallow-doctype-decl", false)
+    }
 
     @Test
     fun emptyReport() {
@@ -27,7 +33,9 @@ class HtmlRequirementsCoverageReporterTest {
         """.trimIndent()
         val out = ByteArrayOutputStream()
         reporter.report(tracker, out)
-        assertThat(out.toString()).and(expected).ignoreWhitespace().areIdentical()
+        assertThat(out.toString())
+            .withDocumentBuilderFactory(dbf)
+            .and(expected).ignoreWhitespace().areIdentical()
     }
 
     @Test
@@ -50,7 +58,9 @@ class HtmlRequirementsCoverageReporterTest {
         """.trimIndent()
         val out = ByteArrayOutputStream()
         reporter.report(tracker, out)
-        assertThat(out.toString()).and(expected).ignoreWhitespace().areIdentical()
+        assertThat(out.toString())
+            .withDocumentBuilderFactory(dbf)
+            .and(expected).ignoreWhitespace().areIdentical()
     }
 
     @Test
@@ -74,7 +84,9 @@ class HtmlRequirementsCoverageReporterTest {
         """.trimIndent()
         val out = ByteArrayOutputStream()
         reporter.report(tracker, out)
-        assertThat(out.toString()).and(expected).ignoreWhitespace().areIdentical()
+        assertThat(out.toString())
+            .withDocumentBuilderFactory(dbf)
+            .and(expected).ignoreWhitespace().areIdentical()
     }
 
     @Test
@@ -97,7 +109,9 @@ class HtmlRequirementsCoverageReporterTest {
         """.trimIndent()
         val out = ByteArrayOutputStream()
         reporter.report(tracker, out)
-        assertThat(out.toString()).and(expected).ignoreWhitespace().areIdentical()
+        assertThat(out.toString())
+            .withDocumentBuilderFactory(dbf)
+            .and(expected).ignoreWhitespace().areIdentical()
     }
 
     @Test
@@ -125,6 +139,8 @@ class HtmlRequirementsCoverageReporterTest {
         """.trimIndent()
         val out = ByteArrayOutputStream()
         reporter.report(tracker, out)
-        assertThat(out.toString()).and(expected).ignoreWhitespace().areIdentical()
+        assertThat(out.toString())
+            .withDocumentBuilderFactory(dbf)
+            .and(expected).ignoreWhitespace().areIdentical()
     }
 }
