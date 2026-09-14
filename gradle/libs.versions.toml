@@ -4,7 +4,7 @@ axion-release = "1.21.3"
 jackson = "3.2.1"
 junit-jupiter = "6.1.2"
 junit-platform = "6.1.3"
-kotlin = "2.4.10"
+kotlin = "2.4.20"
 xmlunit = "2.13.0"
 
 [libraries]
