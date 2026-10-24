@@ -1,5 +1,5 @@
 [versions]
-algp = "9.3.3"
+algp = "9.4.1"
 axion-release = "1.21.4"
 jackson = "3.2.4"
 junit-jupiter = "6.1.3"
