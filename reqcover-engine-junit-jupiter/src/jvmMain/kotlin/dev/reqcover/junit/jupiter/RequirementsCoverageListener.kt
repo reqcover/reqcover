@@ -1,8 +1,10 @@
 package dev.reqcover.junit.jupiter
 
 import dev.reqcover.api.ForRequirement
+import dev.reqcover.engine.CoveragePolicy
 import dev.reqcover.engine.NotFound
 import dev.reqcover.engine.RequirementsCoverageTracker
+import dev.reqcover.engine.evaluateCoverage
 import dev.reqcover.engine.loadRequirements
 import dev.reqcover.engine.parseRequirementsUris
 import dev.reqcover.engine.report
@@ -76,21 +78,19 @@ This will enable ReqCover to check the requirements coverage against your requir
             logger.warn { "The following covered requirements are not defined in the requirements specification: ${tracker.unexpectedRequirements()}" }
         }
 
-        val coveredRequirements = tracker.coveredRequirements().size
-        val expectedRequirements = tracker.expectedRequirements().size
-        val coverage = if (expectedRequirements == 0) {
-            100.0
-        } else {
-            (coveredRequirements.toDouble() / expectedRequirements) * 100
-        }
-        logger.info { "Requirements coverage: $coveredRequirements out of $expectedRequirements = ${"%.1f".format(coverage)}%" }
-
         val config = testPlan.configurationParameters
-        val minimumRequiredCoveragePercent = config.get("reqCover.minimumRequiredCoveragePercent").map { it.toDoubleOrNull() ?: 0.0 }.orElse(0.0)
-        if (coverage < minimumRequiredCoveragePercent) {
+        val policy = CoveragePolicy.parse(
+            minimumRequiredCoveragePercent = config.get("reqCover.minimumRequiredCoveragePercent").orElse(null),
+            failIfBelowMinimum = config.get("reqCover.failIfBelowMinimum").orElse(null),
+        )
+        val outcome = evaluateCoverage(tracker, policy)
+        val coverage = outcome.coveragePercent
+        val minimumRequiredCoveragePercent = policy.minimumRequiredCoveragePercent
+        logger.info { "Requirements coverage: ${outcome.coveredRequirements} out of ${outcome.expectedRequirements} = ${"%.1f".format(coverage)}%" }
+
+        if (outcome.isBelowMinimum) {
             logger.error { "Requirements coverage is below the minimum required coverage of $minimumRequiredCoveragePercent%. Actual coverage: ${"%.1f".format(coverage)}%" }
-            val failIfBelowMinimum = config.get("reqCover.failIfBelowMinimum").map { it.toBoolean() }.orElse(true)
-            if (failIfBelowMinimum) {
+            if (outcome.shouldFailBuild) {
                 logger.error { "Exiting with error code 1 due to insufficient requirements coverage." }
                 failBuild()
             }
