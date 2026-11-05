@@ -28,4 +28,5 @@ include(
     "reqcover-reporter-html",
     "reqcover-reporter-xml",
     "reqcover-source-openapi",
+    "reqcover-testng",
 )
