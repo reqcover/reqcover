@@ -96,6 +96,24 @@ class RequirementsCoverageListenerTest {
     }
 
     @Test
+    fun `fails when a configured requirements URI cannot be found`() {
+        val failBuildCalled = AtomicBoolean(false)
+
+        executeTests(
+            listener = RequirementsCoverageListener(
+                requirementsCoverageReporter = {},
+                failBuild = { failBuildCalled.set(true) },
+            ),
+            testClasses = arrayOf(UnannotatedPassingCase::class.java),
+            configurationParameters = mapOf(
+                "reqCover.requirementsUris" to "requirements-a.yaml, does-not-exist.yaml",
+            ),
+        )
+
+        assertTrue(failBuildCalled.get())
+    }
+
+    @Test
     fun `fails when removed reqCover requirementsUri property is configured`() {
         val failBuildCalled = AtomicBoolean(false)
 
