@@ -1,10 +1,13 @@
 package dev.reqcover.reporter.html
 
 import dev.reqcover.engine.RequirementsCoverageTracker
+import dev.reqcover.engine.spi.RequirementsCoverageReporter
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.xmlunit.assertj.XmlAssert
 import org.xmlunit.assertj.XmlAssert.assertThat
 import java.io.ByteArrayOutputStream
+import java.util.ServiceLoader
 
 class HtmlRequirementsCoverageReporterTest {
     private val reporter = HtmlRequirementsCoverageReporter()
@@ -13,6 +16,16 @@ class HtmlRequirementsCoverageReporterTest {
     private val dbf = javax.xml.parsers.DocumentBuilderFactory.newInstance().apply {
         // Re-enable DOCTYPE parsing
         setFeature("http://apache.org/xml/features/disallow-doctype-decl", false)
+    }
+
+    @Test
+    fun isDiscoverableAsRequirementsCoverageReporter() {
+        val reporters = ServiceLoader.load(RequirementsCoverageReporter::class.java)
+            .map { it::class }
+        assertTrue(
+            HtmlRequirementsCoverageReporter::class in reporters,
+            "Expected HtmlRequirementsCoverageReporter to be registered via ServiceLoader, but found: $reporters",
+        )
     }
 
     @Test
