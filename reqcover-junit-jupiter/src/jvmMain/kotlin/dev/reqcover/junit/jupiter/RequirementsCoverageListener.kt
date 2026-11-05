@@ -3,6 +3,7 @@ package dev.reqcover.junit.jupiter
 import dev.reqcover.api.ForRequirement
 import dev.reqcover.engine.RequirementsCoverageTracker
 import dev.reqcover.engine.loadRequirements
+import dev.reqcover.engine.parseRequirementsUris
 import dev.reqcover.engine.report
 import org.junit.platform.commons.logging.LoggerFactory
 import org.junit.platform.engine.TestExecutionResult
@@ -41,7 +42,7 @@ This will enable ReqCover to check the requirements coverage against your requir
             }
             return
         }
-        for (uri in requirementsUris.split(",").map { it.trim() }.filter { it.isNotEmpty() })
+        for (uri in parseRequirementsUris(requirementsUris))
             tracker.expectAll(loadRequirements(uri))
     }
 
