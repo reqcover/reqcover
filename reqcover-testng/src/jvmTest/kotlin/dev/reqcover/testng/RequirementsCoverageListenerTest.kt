@@ -105,7 +105,73 @@ class RequirementsCoverageListenerTest {
         assertFalse(failBuildCalled.get())
     }
 
-    private fun capturedWarnings(action: () -> Unit): List<String> {
+    @Test
+    fun `fails when coverage is below the minimum required threshold`() {
+        val failBuildCalled = AtomicBoolean(false)
+
+        val errors = capturedMessages(Level.SEVERE) {
+            executeTests(
+                listener = RequirementsCoverageListener(
+                    requirementsCoverageReporter = {},
+                    failBuild = { failBuildCalled.set(true) },
+                    systemProperty = mapOf(
+                        "reqCover.requirementsUris" to "requirements-a.yaml",
+                        "reqCover.minimumRequiredCoveragePercent" to "100.0",
+                    )::get,
+                ),
+                testClasses = arrayOf(UnannotatedPassingCase::class.java),
+            )
+        }
+
+        assertTrue(failBuildCalled.get())
+        assertTrue(
+            errors.any { it.startsWith("Requirements coverage is below the minimum required coverage of 100.0%") },
+            "Expected an error about insufficient coverage, but got: $errors",
+        )
+    }
+
+    @Test
+    fun `does not fail below the minimum when failIfBelowMinimum is false`() {
+        val failBuildCalled = AtomicBoolean(false)
+
+        executeTests(
+            listener = RequirementsCoverageListener(
+                requirementsCoverageReporter = {},
+                failBuild = { failBuildCalled.set(true) },
+                systemProperty = mapOf(
+                    "reqCover.requirementsUris" to "requirements-a.yaml",
+                    "reqCover.minimumRequiredCoveragePercent" to "100.0",
+                    "reqCover.failIfBelowMinimum" to "false",
+                )::get,
+            ),
+            testClasses = arrayOf(UnannotatedPassingCase::class.java),
+        )
+
+        assertFalse(failBuildCalled.get())
+    }
+
+    @Test
+    fun `does not fail when coverage meets the minimum required threshold`() {
+        val failBuildCalled = AtomicBoolean(false)
+
+        executeTests(
+            listener = RequirementsCoverageListener(
+                requirementsCoverageReporter = {},
+                failBuild = { failBuildCalled.set(true) },
+                systemProperty = mapOf(
+                    "reqCover.requirementsUris" to "requirements-a.yaml",
+                    "reqCover.minimumRequiredCoveragePercent" to "100.0",
+                )::get,
+            ),
+            testClasses = arrayOf(PassingRequirementCase::class.java),
+        )
+
+        assertFalse(failBuildCalled.get())
+    }
+
+    private fun capturedWarnings(action: () -> Unit): List<String> = capturedMessages(Level.WARNING, action)
+
+    private fun capturedMessages(level: Level, action: () -> Unit): List<String> {
         val logger = Logger.getLogger(RequirementsCoverageListener::class.java.name)
         val records = mutableListOf<LogRecord>()
         val handler = object : Handler() {
@@ -123,7 +189,7 @@ class RequirementsCoverageListenerTest {
         } finally {
             logger.removeHandler(handler)
         }
-        return records.filter { it.level == Level.WARNING }.map { it.message }
+        return records.filter { it.level == level }.map { it.message }
     }
 
     private fun listenerWith(tracker: RequirementsCoverageTracker): RequirementsCoverageListener =
@@ -168,6 +234,12 @@ class RequirementsCoverageListenerTest {
         @org.testng.annotations.Test
         @ForRequirement("#reqOne")
         @ForRequirement("#reqTwo")
+        fun passes() {
+        }
+    }
+
+    class UnannotatedPassingCase {
+        @org.testng.annotations.Test
         fun passes() {
         }
     }
