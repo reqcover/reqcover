@@ -20,13 +20,9 @@ class RequirementsCoverageListenerTest {
         val tracker = RequirementsCoverageTracker()
 
         executeTests(
-            listener = RequirementsCoverageListener(
+            listener = listener(
                 tracker = tracker,
-                requirementsCoverageReporter = {},
-                failBuild = {},
-                systemProperty = mapOf(
-                    "reqCover.requirementsUris" to "requirements-a.yaml, requirements-b.yaml",
-                )::get,
+                properties = mapOf("reqCover.requirementsUris" to "requirements-a.yaml, requirements-b.yaml"),
             ),
             testClasses = arrayOf(PassingRequirementCase::class.java),
         )
@@ -39,7 +35,7 @@ class RequirementsCoverageListenerTest {
         val tracker = RequirementsCoverageTracker()
 
         executeTests(
-            listener = listenerWith(tracker),
+            listener = listener(tracker = tracker),
             testClasses = arrayOf(PassingRequirementCase::class.java, FailingAndSkippedRequirementCase::class.java),
         )
 
@@ -51,7 +47,7 @@ class RequirementsCoverageListenerTest {
         val tracker = RequirementsCoverageTracker()
 
         executeTests(
-            listener = listenerWith(tracker),
+            listener = listener(tracker = tracker),
             testClasses = arrayOf(MultipleRequirementsCase::class.java),
         )
 
@@ -62,7 +58,7 @@ class RequirementsCoverageListenerTest {
     fun `warns how to configure requirements when no requirements URIs are configured`() {
         val warnings = capturedWarnings {
             executeTests(
-                listener = listenerWith(RequirementsCoverageTracker()),
+                listener = listener(),
                 testClasses = arrayOf(PassingRequirementCase::class.java),
             )
         }
@@ -77,11 +73,7 @@ class RequirementsCoverageListenerTest {
     fun `does not warn when requirements URIs are configured`() {
         val warnings = capturedWarnings {
             executeTests(
-                listener = RequirementsCoverageListener(
-                    requirementsCoverageReporter = {},
-                    failBuild = {},
-                    systemProperty = mapOf("reqCover.requirementsUris" to "requirements-a.yaml")::get,
-                ),
+                listener = listener(properties = mapOf("reqCover.requirementsUris" to "requirements-a.yaml")),
                 testClasses = arrayOf(PassingRequirementCase::class.java),
             )
         }
@@ -94,10 +86,9 @@ class RequirementsCoverageListenerTest {
         val failBuildCalled = AtomicBoolean(false)
 
         executeTests(
-            listener = RequirementsCoverageListener(
-                requirementsCoverageReporter = {},
+            listener = listener(
                 failBuild = { failBuildCalled.set(true) },
-                systemProperty = mapOf("reqCover.minimumRequiredCoveragePercent" to "100.0")::get,
+                properties = mapOf("reqCover.minimumRequiredCoveragePercent" to "100.0"),
             ),
             testClasses = arrayOf(PassingRequirementCase::class.java),
         )
@@ -111,13 +102,12 @@ class RequirementsCoverageListenerTest {
 
         val errors = capturedMessages(Level.SEVERE) {
             executeTests(
-                listener = RequirementsCoverageListener(
-                    requirementsCoverageReporter = {},
+                listener = listener(
                     failBuild = { failBuildCalled.set(true) },
-                    systemProperty = mapOf(
+                    properties = mapOf(
                         "reqCover.requirementsUris" to "requirements-a.yaml",
                         "reqCover.minimumRequiredCoveragePercent" to "100.0",
-                    )::get,
+                    ),
                 ),
                 testClasses = arrayOf(UnannotatedPassingCase::class.java),
             )
@@ -135,14 +125,13 @@ class RequirementsCoverageListenerTest {
         val failBuildCalled = AtomicBoolean(false)
 
         executeTests(
-            listener = RequirementsCoverageListener(
-                requirementsCoverageReporter = {},
+            listener = listener(
                 failBuild = { failBuildCalled.set(true) },
-                systemProperty = mapOf(
+                properties = mapOf(
                     "reqCover.requirementsUris" to "requirements-a.yaml",
                     "reqCover.minimumRequiredCoveragePercent" to "100.0",
                     "reqCover.failIfBelowMinimum" to "false",
-                )::get,
+                ),
             ),
             testClasses = arrayOf(UnannotatedPassingCase::class.java),
         )
@@ -155,18 +144,35 @@ class RequirementsCoverageListenerTest {
         val failBuildCalled = AtomicBoolean(false)
 
         executeTests(
-            listener = RequirementsCoverageListener(
-                requirementsCoverageReporter = {},
+            listener = listener(
                 failBuild = { failBuildCalled.set(true) },
-                systemProperty = mapOf(
+                properties = mapOf(
                     "reqCover.requirementsUris" to "requirements-a.yaml",
                     "reqCover.minimumRequiredCoveragePercent" to "100.0",
-                )::get,
+                ),
             ),
             testClasses = arrayOf(PassingRequirementCase::class.java),
         )
 
         assertFalse(failBuildCalled.get())
+    }
+
+    @Test
+    fun `reports the coverage once at the end of the run`() {
+        val tracker = RequirementsCoverageTracker()
+        val reportedTrackers = mutableListOf<RequirementsCoverageTracker>()
+
+        executeTests(
+            listener = listener(
+                tracker = tracker,
+                requirementsCoverageReporter = { reportedTrackers.add(it) },
+                properties = mapOf("reqCover.requirementsUris" to "requirements-a.yaml"),
+            ),
+            testClasses = arrayOf(PassingRequirementCase::class.java),
+        )
+
+        assertEquals(listOf(tracker), reportedTrackers)
+        assertEquals(setOf("#reqOne"), reportedTrackers.single().coveredRequirements())
     }
 
     private fun capturedWarnings(action: () -> Unit): List<String> = capturedMessages(Level.WARNING, action)
@@ -192,12 +198,17 @@ class RequirementsCoverageListenerTest {
         return records.filter { it.level == level }.map { it.message }
     }
 
-    private fun listenerWith(tracker: RequirementsCoverageTracker): RequirementsCoverageListener =
+    private fun listener(
+        properties: Map<String, String> = emptyMap(),
+        tracker: RequirementsCoverageTracker = RequirementsCoverageTracker(),
+        failBuild: () -> Unit = {},
+        requirementsCoverageReporter: (RequirementsCoverageTracker) -> Unit = {},
+    ): RequirementsCoverageListener =
         RequirementsCoverageListener(
             tracker = tracker,
-            requirementsCoverageReporter = {},
-            failBuild = {},
-            systemProperty = { null },
+            requirementsCoverageReporter = requirementsCoverageReporter,
+            failBuild = failBuild,
+            systemProperty = properties::get,
         )
 
     private fun executeTests(listener: RequirementsCoverageListener, testClasses: Array<Class<*>>) {

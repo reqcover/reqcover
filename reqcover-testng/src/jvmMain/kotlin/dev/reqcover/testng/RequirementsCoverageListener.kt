@@ -73,5 +73,6 @@ This will enable ReqCover to check the requirements coverage against your requir
         } else {
             logger.info("Requirements coverage meets the minimum required coverage of $minimumRequiredCoveragePercent%. Actual coverage: $coverage%")
         }
+        requirementsCoverageReporter(tracker)
     }
 }
