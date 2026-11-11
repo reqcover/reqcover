@@ -161,6 +161,30 @@ class RequirementsCoverageListenerTest {
     }
 
     @Test
+    fun `fails when a configured requirements file is not a supported format`() {
+        val failBuildCalled = AtomicBoolean(false)
+
+        val errors = capturedMessages(Level.SEVERE) {
+            executeTests(
+                listener = listener(
+                    failBuild = { failBuildCalled.set(true) },
+                    properties = mapOf(
+                        "reqCover.requirementsUris" to "not-openapi.yaml",
+                        "reqCover.minimumRequiredCoveragePercent" to "100.0",
+                    ),
+                ),
+                testClasses = arrayOf(UnannotatedPassingCase::class.java),
+            )
+        }
+
+        assertTrue(failBuildCalled.get())
+        assertTrue(
+            errors.any { it.contains("not-openapi.yaml") && it.contains("reqCover.requirementsUris") },
+            "Expected an error naming the unsupported URI and the property to check, but got: $errors",
+        )
+    }
+
+    @Test
     fun `does not fail below the minimum when failIfBelowMinimum is false`() {
         val failBuildCalled = AtomicBoolean(false)
 

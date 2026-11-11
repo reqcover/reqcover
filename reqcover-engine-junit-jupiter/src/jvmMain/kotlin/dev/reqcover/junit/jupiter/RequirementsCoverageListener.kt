@@ -2,10 +2,9 @@ package dev.reqcover.junit.jupiter
 
 import dev.reqcover.api.ForRequirement
 import dev.reqcover.engine.CoveragePolicy
-import dev.reqcover.engine.NotFound
 import dev.reqcover.engine.RequirementsCoverageTracker
 import dev.reqcover.engine.evaluateCoverage
-import dev.reqcover.engine.loadRequirements
+import dev.reqcover.engine.loadAllRequirements
 import dev.reqcover.engine.parseRequirementsUris
 import dev.reqcover.engine.report
 import org.junit.platform.commons.logging.LoggerFactory
@@ -45,14 +44,12 @@ This will enable ReqCover to check the requirements coverage against your requir
             }
             return
         }
-        for (uri in parseRequirementsUris(requirementsUris)) {
-            try {
-                tracker.expectAll(loadRequirements(uri))
-            } catch (e: NotFound) {
-                logger.error(e) { "${e.message}. Check the reqCover.requirementsUris configuration parameter." }
-                failBuild()
-            }
+        val loaded = loadAllRequirements(parseRequirementsUris(requirementsUris))
+        tracker.expectAll(loaded.requirements)
+        loaded.failures.forEach { failure ->
+            logger.error(failure.cause) { "${failure.message}. Check the reqCover.requirementsUris configuration parameter." }
         }
+        if (loaded.failures.isNotEmpty()) failBuild()
     }
 
     override fun executionFinished(testIdentifier: TestIdentifier, testExecutionResult: TestExecutionResult) {
