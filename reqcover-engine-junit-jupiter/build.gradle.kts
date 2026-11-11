@@ -16,6 +16,7 @@ kotlin {
             implementation(libs.junit.platform.launcher)
         }
         jvmTest.dependencies {
+            implementation(project(":reqcover-source-openapi"))
             implementation(libs.junit.jupiter.engine)
             implementation(libs.bundles.junit)
         }

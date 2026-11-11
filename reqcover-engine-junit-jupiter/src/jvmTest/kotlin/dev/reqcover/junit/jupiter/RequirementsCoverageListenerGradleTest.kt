@@ -11,7 +11,7 @@ import kotlin.streams.toList
 
 class RequirementsCoverageListenerGradleTest {
     private val fixtureDirectory = repositoryRoot()
-        .resolve("reqcover-junit-jupiter/src/jvmTest/fixtures/legacy-config-check")
+        .resolve("reqcover-engine-junit-jupiter/src/jvmTest/fixtures/legacy-config-check")
 
     @Test
     fun `fails the Gradle test task when reqCover requirementsUri is configured`() {
@@ -135,7 +135,7 @@ class RequirementsCoverageListenerGradleTest {
         val jarDirectories = listOf(
             repositoryRoot.resolve("reqcover-core/build/libs"),
             repositoryRoot.resolve("reqcover-engine/build/libs"),
-            repositoryRoot.resolve("reqcover-junit-jupiter/build/libs"),
+            repositoryRoot.resolve("reqcover-engine-junit-jupiter/build/libs"),
         )
         return jarDirectories.map { jarDirectory ->
             Files.list(jarDirectory).use { paths ->
