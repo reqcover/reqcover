@@ -72,6 +72,7 @@ This will enable ReqCover to check the requirements coverage against your requir
         val coverage = "%.1f".format(outcome.coveragePercent)
         val minimumRequiredCoveragePercent = policy.minimumRequiredCoveragePercent
         logger.info("Requirements coverage: ${outcome.coveredRequirements} out of ${outcome.expectedRequirements} = $coverage%")
+        requirementsCoverageReporter(tracker)
 
         if (outcome.isBelowMinimum) {
             logger.severe("Requirements coverage is below the minimum required coverage of $minimumRequiredCoveragePercent%. Actual coverage: $coverage%")
@@ -82,6 +83,5 @@ This will enable ReqCover to check the requirements coverage against your requir
         } else {
             logger.info("Requirements coverage meets the minimum required coverage of $minimumRequiredCoveragePercent%. Actual coverage: $coverage%")
         }
-        requirementsCoverageReporter(tracker)
     }
 }

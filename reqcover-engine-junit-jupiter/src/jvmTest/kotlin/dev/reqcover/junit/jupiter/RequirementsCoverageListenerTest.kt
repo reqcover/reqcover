@@ -96,6 +96,25 @@ class RequirementsCoverageListenerTest {
     }
 
     @Test
+    fun `writes the coverage report before failing the build`() {
+        val events = mutableListOf<String>()
+
+        executeTests(
+            listener = RequirementsCoverageListener(
+                requirementsCoverageReporter = { events.add("report") },
+                failBuild = { events.add("failBuild") },
+            ),
+            testClasses = arrayOf(UnannotatedPassingCase::class.java),
+            configurationParameters = mapOf(
+                "reqCover.requirementsUris" to "requirements-a.yaml",
+                "reqCover.minimumRequiredCoveragePercent" to "100.0",
+            ),
+        )
+
+        assertEquals(listOf("report", "failBuild"), events)
+    }
+
+    @Test
     fun `fails when a configured requirements URI cannot be found`() {
         val failBuildCalled = AtomicBoolean(false)
 
