@@ -1,7 +1,6 @@
 plugins {
     kotlin("multiplatform")
     id("git-publishing")
-    alias(libs.plugins.kotlin.serialization)
 }
 
 kotlin {
@@ -16,10 +15,13 @@ kotlin {
             implementation(libs.testng)
         }
         jvmTest.dependencies {
+            implementation(project(":reqcover-source-openapi"))
+            implementation(libs.junit.jupiter.engine)
+            implementation(libs.bundles.junit)
         }
     }
 }
 
 tasks.named<Test>("jvmTest") {
-    useTestNG()
+    useJUnitPlatform()
 }
