@@ -1,6 +1,8 @@
 package dev.reqcover.source.openapi
 
+import dev.reqcover.engine.UnsupportedFormat
 import dev.reqcover.engine.spi.RequirementsSource
+import kotlin.test.assertFailsWith
 import dev.reqcover.engine.loadRequirements
 import java.util.ServiceLoader
 import kotlin.test.Test
@@ -117,5 +119,27 @@ class OpenApiRequirementsSourceTest {
             "#getHealth/500/database",
             "#getHealth/500/downstream",
         ), requirements)
+    }
+
+    @Test
+    fun `rejects a YAML document without paths as an unsupported format`() {
+        val error = assertFailsWith<UnsupportedFormat> { OpenApiRequirementsSource().load("not-openapi.yaml") }
+        assertTrue(error.message!!.contains("not-openapi.yaml"))
+    }
+
+    @Test
+    fun `rejects a malformed YAML document as an unsupported format`() {
+        val error = assertFailsWith<UnsupportedFormat> { OpenApiRequirementsSource().load("malformed.yaml") }
+        assertTrue(error.message!!.contains("malformed.yaml"))
+    }
+
+    @Test
+    fun `rejects an empty file as an unsupported format`() {
+        assertFailsWith<UnsupportedFormat> { OpenApiRequirementsSource().load("empty.yaml") }
+    }
+
+    @Test
+    fun `the engine reports a non-OpenAPI file as an unsupported format`() {
+        assertFailsWith<UnsupportedFormat> { loadRequirements("not-openapi.yaml") }
     }
 }

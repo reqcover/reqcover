@@ -1,5 +1,7 @@
 package dev.reqcover.source.openapi
 
+import dev.reqcover.engine.UnsupportedFormat
+import tools.jackson.core.JacksonException
 import tools.jackson.databind.JsonNode
 import tools.jackson.dataformat.yaml.YAMLMapper
 import dev.reqcover.engine.spi.JvmRequirementsSource
@@ -8,6 +10,15 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 
 class OpenApiRequirementsSource : JvmRequirementsSource {
+    override fun load(uri: String): Set<String> =
+        try {
+            super.load(uri)
+        } catch (e: JacksonException) {
+            throw UnsupportedFormat(uri, e)
+        } catch (e: IllegalArgumentException) {
+            throw UnsupportedFormat(uri, e)
+        }
+
     override fun load(inputStream: InputStream): Set<String> =
         loadOpenApiRequirements(YAMLMapper().readTree(inputStream))
 
@@ -16,7 +27,7 @@ class OpenApiRequirementsSource : JvmRequirementsSource {
 
     fun loadOpenApiRequirements(root: JsonNode): Set<String> {
         val setOfRequirements = mutableSetOf<String>()
-        val pathsNode = root.get("paths")
+        val pathsNode = requireNotNull(root.get("paths")) { "Not an OpenAPI document: no 'paths' found." }
         for ((rawPath, pathItem) in pathsNode.properties()) {
             for ((method, opNode) in pathItem.properties()) {
                 val operationId = opNode.get("operationId")?.asText()
