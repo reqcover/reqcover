@@ -121,6 +121,27 @@ class RequirementsCoverageListenerTest {
     }
 
     @Test
+    fun `fails when a configured requirements URI cannot be found`() {
+        val failBuildCalled = AtomicBoolean(false)
+
+        val errors = capturedMessages(Level.SEVERE) {
+            executeTests(
+                listener = listener(
+                    failBuild = { failBuildCalled.set(true) },
+                    properties = mapOf("reqCover.requirementsUris" to "requirements-a.yaml, does-not-exist.yaml"),
+                ),
+                testClasses = arrayOf(UnannotatedPassingCase::class.java),
+            )
+        }
+
+        assertTrue(failBuildCalled.get())
+        assertTrue(
+            errors.any { it.contains("does-not-exist.yaml") && it.contains("reqCover.requirementsUris") },
+            "Expected an error naming the missing URI and the property to check, but got: $errors",
+        )
+    }
+
+    @Test
     fun `does not fail below the minimum when failIfBelowMinimum is false`() {
         val failBuildCalled = AtomicBoolean(false)
 

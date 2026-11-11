@@ -2,6 +2,7 @@ package dev.reqcover.testng
 
 import dev.reqcover.api.ForRequirement
 import dev.reqcover.engine.CoveragePolicy
+import dev.reqcover.engine.NotFound
 import dev.reqcover.engine.RequirementsCoverageTracker
 import dev.reqcover.engine.evaluateCoverage
 import dev.reqcover.engine.loadRequirements
@@ -10,6 +11,7 @@ import dev.reqcover.engine.report
 import org.testng.IExecutionListener
 import org.testng.ITestListener
 import org.testng.ITestResult
+import java.util.logging.Level
 import java.util.logging.Logger
 import kotlin.system.exitProcess
 
@@ -35,7 +37,14 @@ This will enable ReqCover to check the requirements coverage against your requir
             )
             return
         }
-        parseRequirementsUris(requirementsUris).forEach { uri -> tracker.expectAll(loadRequirements(uri)) }
+        parseRequirementsUris(requirementsUris).forEach { uri ->
+            try {
+                tracker.expectAll(loadRequirements(uri))
+            } catch (e: NotFound) {
+                logger.log(Level.SEVERE, "${e.message}. Check the reqCover.requirementsUris system property.", e)
+                failBuild()
+            }
+        }
     }
 
     override fun onTestSuccess(result: ITestResult) {
