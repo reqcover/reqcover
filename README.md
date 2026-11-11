@@ -4,7 +4,7 @@ https://reqcover.dev/
 https://github.com/reqcover/reqcover
 
 ReqCover is a collection of tools and libraries to track requirements coverage from test cases.
-Currently, it supports JVM languages (Java, Kotlin, Scala, Groovy) and tests running in JUnit 5 Jupiter.
+Currently, it supports JVM languages (Java, Kotlin, Scala, Groovy) and tests running in JUnit 5 Jupiter or TestNG.
 
 ## Architecture
 ReqCover consists of the following components:
@@ -12,6 +12,44 @@ ReqCover consists of the following components:
 * Framework for managing requirements coverage with
   * SPI for loading requirements from external sources
 * JUnit 5 Jupiter extension for tracking and reporting requirements coverage
+* TestNG listener for tracking and reporting requirements coverage
+
+## TestNG
+Add `reqcover-engine-testng` and a requirements source (for example `reqcover-source-openapi`) to the test classpath.
+The listener registers itself automatically; no `@Listeners` annotation or `testng.xml` entry is needed.
+
+TestNG has no equivalent of `junit-platform.properties`, so ReqCover is configured through JVM system properties:
+
+| System property | Description | Default |
+|---|---|---|
+| `reqCover.requirementsUris` | Comma-separated classpath locations of the requirements specifications | none (a warning is logged) |
+| `reqCover.minimumRequiredCoveragePercent` | Minimum required requirements coverage in percent | `0.0` |
+| `reqCover.failIfBelowMinimum` | Whether to fail the build if the coverage is below the minimum | `true` |
+
+Gradle:
+```kotlin
+tasks.test {
+    useTestNG()
+    systemProperty("reqCover.requirementsUris", "requirements.yaml")
+    systemProperty("reqCover.minimumRequiredCoveragePercent", "100")
+}
+```
+
+Maven Surefire:
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-surefire-plugin</artifactId>
+    <configuration>
+        <systemPropertyVariables>
+            <reqCover.requirementsUris>requirements.yaml</reqCover.requirementsUris>
+            <reqCover.minimumRequiredCoveragePercent>100</reqCover.minimumRequiredCoveragePercent>
+        </systemPropertyVariables>
+    </configuration>
+</plugin>
+```
+
+Annotate TestNG tests with `@ForRequirement` exactly as with JUnit; only passing tests count as verifying their requirements.
 
 ## Glossary
 * **Requirement** - a piece of functionality that should be implemented in the system
