@@ -87,6 +87,27 @@ class RequirementsCoverageListenerTest {
     }
 
     @Test
+    fun `warns when a requirements file contains no requirements`() {
+        val failBuildCalled = AtomicBoolean(false)
+
+        val warnings = capturedWarnings {
+            executeTests(
+                listener = listener(
+                    failBuild = { failBuildCalled.set(true) },
+                    properties = mapOf("reqCover.requirementsUris" to "requirements-a.yaml, no-requirements.yaml"),
+                ),
+                testClasses = arrayOf(PassingRequirementCase::class.java),
+            )
+        }
+
+        assertFalse(failBuildCalled.get())
+        assertTrue(
+            warnings.any { it.contains("no-requirements.yaml") && it.contains("no requirements") },
+            "Expected a warning naming the file without requirements, but got: $warnings",
+        )
+    }
+
+    @Test
     fun `does not warn when requirements URIs are configured`() {
         val warnings = capturedWarnings {
             executeTests(

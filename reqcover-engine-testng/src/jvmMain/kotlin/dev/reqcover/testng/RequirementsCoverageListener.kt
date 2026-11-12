@@ -41,6 +41,9 @@ This will enable ReqCover to check the requirements coverage against your requir
         loaded.failures.forEach { failure ->
             logger.log(Level.SEVERE, "${failure.message}. Check the reqCover.requirementsUris system property.", failure.cause)
         }
+        loaded.urisWithoutRequirements.forEach { uri ->
+            logger.warning("Requirements file at URI: $uri contains no requirements. Check the reqCover.requirementsUris system property.")
+        }
         if (loaded.failures.isNotEmpty()) failBuild()
     }
 
