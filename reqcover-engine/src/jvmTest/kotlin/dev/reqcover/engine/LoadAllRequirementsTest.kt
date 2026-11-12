@@ -70,12 +70,12 @@ class LoadAllRequirementsTest {
     @Test
     fun `lists the URIs that contain no requirements`() {
         val result = loadAllRequirements(
-            uris = listOf("a.yaml", "empty.yaml"),
-            load = loader("a.yaml" to setOf("#one"), "empty.yaml" to emptySet()),
+            uris = listOf("empty-1.yaml", "a.yaml", "empty-2.yaml"),
+            load = loader("a.yaml" to setOf("#one"), "empty-1.yaml" to emptySet(), "empty-2.yaml" to emptySet()),
         )
 
         assertEquals(setOf("#one"), result.requirements)
-        assertEquals(listOf("empty.yaml"), result.urisWithoutRequirements)
+        assertEquals(listOf("empty-1.yaml", "empty-2.yaml"), result.urisWithoutRequirements)
         assertEquals(emptyList(), result.failures)
     }
 
