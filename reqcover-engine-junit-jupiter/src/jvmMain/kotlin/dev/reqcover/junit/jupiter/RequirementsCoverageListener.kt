@@ -33,8 +33,8 @@ class RequirementsCoverageListener @JvmOverloads constructor(
             failBuild()
             return
         }
-        val requirementsUris = config.get("reqCover.requirementsUris").orElse(null)
-        if (requirementsUris == null) {
+        val requirementsUris = parseRequirementsUris(config.get("reqCover.requirementsUris").orElse(null) ?: "")
+        if (requirementsUris.isEmpty()) {
             logger.warn {
                 """ReqCover is on the classpath, but no requirements specification has been provided.
 The recommended solution is to add the following line to your junit-platform.properties file:
@@ -44,7 +44,7 @@ This will enable ReqCover to check the requirements coverage against your requir
             }
             return
         }
-        val loaded = loadAllRequirements(parseRequirementsUris(requirementsUris))
+        val loaded = loadAllRequirements(requirementsUris)
         tracker.expectAll(loaded.requirements)
         loaded.failures.forEach { failure ->
             logger.error(failure.cause) { "${failure.message}. Check the reqCover.requirementsUris configuration parameter." }

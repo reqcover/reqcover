@@ -70,6 +70,23 @@ class RequirementsCoverageListenerTest {
     }
 
     @Test
+    fun `warns how to configure requirements when the requirements URIs value is empty`() {
+        listOf("", " , ").forEach { emptyValue ->
+            val warnings = capturedWarnings {
+                executeTests(
+                    listener = listener(properties = mapOf("reqCover.requirementsUris" to emptyValue)),
+                    testClasses = arrayOf(PassingRequirementCase::class.java),
+                )
+            }
+
+            assertTrue(
+                warnings.any { it.contains("-DreqCover.requirementsUris=") },
+                "Expected a warning explaining how to configure reqCover.requirementsUris for '$emptyValue', but got: $warnings",
+            )
+        }
+    }
+
+    @Test
     fun `does not warn when requirements URIs are configured`() {
         val warnings = capturedWarnings {
             executeTests(

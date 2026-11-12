@@ -12,6 +12,10 @@ import org.junit.platform.launcher.core.LauncherConfig
 import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder
 import org.junit.platform.launcher.core.LauncherFactory
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.logging.Handler
+import java.util.logging.Level
+import java.util.logging.LogRecord
+import java.util.logging.Logger
 
 class RequirementsCoverageListenerTest {
     @Test
@@ -152,6 +156,24 @@ class RequirementsCoverageListenerTest {
     }
 
     @Test
+    fun `warns how to configure requirements when the requirements URIs value is empty`() {
+        listOf("", " , ").forEach { emptyValue ->
+            val warnings = capturedWarnings {
+                executeTests(
+                    listener = RequirementsCoverageListener(requirementsCoverageReporter = {}, failBuild = {}),
+                    testClasses = arrayOf(PassingRequirementCase::class.java),
+                    configurationParameters = mapOf("reqCover.requirementsUris" to emptyValue),
+                )
+            }
+
+            assertTrue(
+                warnings.any { it.contains("reqCover.requirementsUris=path/to/your/requirements") },
+                "Expected a warning explaining how to configure reqCover.requirementsUris for '$emptyValue', but got: $warnings",
+            )
+        }
+    }
+
+    @Test
     fun `fails when removed reqCover requirementsUri property is configured`() {
         val failBuildCalled = AtomicBoolean(false)
 
@@ -167,6 +189,27 @@ class RequirementsCoverageListenerTest {
         )
 
         assertTrue(failBuildCalled.get())
+    }
+
+    private fun capturedWarnings(action: () -> Unit): List<String> {
+        val logger = Logger.getLogger(RequirementsCoverageListener::class.java.name)
+        val records = mutableListOf<LogRecord>()
+        val handler = object : Handler() {
+            override fun publish(record: LogRecord) {
+                records.add(record)
+            }
+
+            override fun flush() {}
+
+            override fun close() {}
+        }
+        logger.addHandler(handler)
+        try {
+            action()
+        } finally {
+            logger.removeHandler(handler)
+        }
+        return records.filter { it.level == Level.WARNING }.map { it.message }
     }
 
     private fun executeTests(

@@ -23,8 +23,8 @@ class RequirementsCoverageListener @JvmOverloads constructor(
     private val logger = Logger.getLogger(RequirementsCoverageListener::class.java.name)
 
     override fun onExecutionStart() {
-        val requirementsUris = systemProperty("reqCover.requirementsUris")
-        if (requirementsUris == null) {
+        val requirementsUris = parseRequirementsUris(systemProperty("reqCover.requirementsUris") ?: "")
+        if (requirementsUris.isEmpty()) {
             logger.warning(
                 """ReqCover is on the classpath, but no requirements specification has been provided.
 The recommended solution is to pass the following system property to the JVM running your TestNG tests:
@@ -36,7 +36,7 @@ This will enable ReqCover to check the requirements coverage against your requir
             )
             return
         }
-        val loaded = loadAllRequirements(parseRequirementsUris(requirementsUris))
+        val loaded = loadAllRequirements(requirementsUris)
         tracker.expectAll(loaded.requirements)
         loaded.failures.forEach { failure ->
             logger.log(Level.SEVERE, "${failure.message}. Check the reqCover.requirementsUris system property.", failure.cause)
