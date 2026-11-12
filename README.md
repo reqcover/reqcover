@@ -51,6 +51,19 @@ Maven Surefire:
 
 Annotate TestNG tests with `@ForRequirement` exactly as with JUnit; only passing tests count as verifying their requirements.
 
+## Requirements file problems
+These rules apply to JUnit and TestNG alike:
+
+| Situation | Behaviour |
+|---|---|
+| A requirements file is not found | Error, the build fails |
+| A requirements file is malformed or not a supported format | Error, the build fails |
+| `reqCover.requirementsUris` is not set or is empty | Warning, coverage is not checked |
+| A requirements file contains no requirements (e.g. OpenAPI `paths: {}`) | Warning, the file counts as fully covered |
+
+The two warning cases are provisional and may change based on user feedback.
+If you have an opinion, please comment on https://github.com/reqcover/reqcover/issues.
+
 ## Glossary
 * **Requirement** - a piece of functionality that should be implemented in the system
 * **Test case** - a piece of code that tests a requirement
