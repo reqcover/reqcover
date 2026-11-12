@@ -1,11 +1,10 @@
 package dev.reqcover.testng
 
 import dev.reqcover.api.ForRequirement
-import dev.reqcover.engine.CoveragePolicy
+import dev.reqcover.engine.ReqCoverConfiguration
 import dev.reqcover.engine.RequirementsCoverageTracker
 import dev.reqcover.engine.evaluateCoverage
 import dev.reqcover.engine.loadAllRequirements
-import dev.reqcover.engine.parseRequirementsUris
 import dev.reqcover.engine.report
 import org.testng.IExecutionListener
 import org.testng.ITestListener
@@ -21,9 +20,10 @@ class RequirementsCoverageListener @JvmOverloads constructor(
     private val systemProperty: (String) -> String? = System::getProperty,
 ) : IExecutionListener, ITestListener {
     private val logger = Logger.getLogger(RequirementsCoverageListener::class.java.name)
+    private val configuration = ReqCoverConfiguration(listOf(systemProperty))
 
     override fun onExecutionStart() {
-        val requirementsUris = parseRequirementsUris(systemProperty("reqCover.requirementsUris") ?: "")
+        val requirementsUris = configuration.requirementsUris()
         if (requirementsUris.isEmpty()) {
             logger.warning(
                 """ReqCover is on the classpath, but no requirements specification has been provided.
@@ -64,10 +64,7 @@ This will enable ReqCover to check the requirements coverage against your requir
             logger.warning("The following covered requirements are not defined in the requirements specification: ${tracker.unexpectedRequirements()}")
         }
 
-        val policy = CoveragePolicy.parse(
-            minimumRequiredCoveragePercent = systemProperty("reqCover.minimumRequiredCoveragePercent"),
-            failIfBelowMinimum = systemProperty("reqCover.failIfBelowMinimum"),
-        )
+        val policy = configuration.coveragePolicy()
         val outcome = evaluateCoverage(tracker, policy)
         val coverage = "%.1f".format(outcome.coveragePercent)
         val minimumRequiredCoveragePercent = policy.minimumRequiredCoveragePercent
