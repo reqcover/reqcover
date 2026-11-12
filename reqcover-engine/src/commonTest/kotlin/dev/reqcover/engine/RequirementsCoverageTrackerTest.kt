@@ -47,4 +47,19 @@ class RequirementsCoverageTrackerTest {
         requirementsCoverageTracker.verified("req-1") // Cover a requirement without expecting it
         assertEquals(setOf("req-1"), requirementsCoverageTracker.unexpectedRequirements())
     }
+
+    @Test
+    fun `requirement sets are snapshots that later changes do not affect`() {
+        val tracker = RequirementsCoverageTracker()
+        tracker.expect("req-1")
+        tracker.verified("req-1")
+        val expected = tracker.expectedRequirements()
+        val verified = tracker.verifiedRequirements()
+
+        tracker.expect("req-2")
+        tracker.verified("req-2")
+
+        assertEquals(setOf("req-1"), expected)
+        assertEquals(setOf("req-1"), verified)
+    }
 }
