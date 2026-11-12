@@ -49,6 +49,50 @@ class RequirementsCoverageListenerTest {
     }
 
     @Test
+    fun `a system property takes precedence over the JUnit configuration parameter`() {
+        val tracker = RequirementsCoverageTracker()
+        val failBuildCalled = AtomicBoolean(false)
+
+        executeTests(
+            listener = RequirementsCoverageListener(
+                tracker = tracker,
+                requirementsCoverageReporter = {},
+                failBuild = { failBuildCalled.set(true) },
+                systemProperty = mapOf(
+                    "reqCover.requirementsUris" to "requirements-b.yaml",
+                    "reqCover.minimumRequiredCoveragePercent" to "100.0",
+                )::get,
+            ),
+            testClasses = arrayOf(PassingRequirementCase::class.java),
+            configurationParameters = mapOf(
+                "reqCover.requirementsUris" to "requirements-a.yaml",
+                "reqCover.minimumRequiredCoveragePercent" to "0.0",
+            ),
+        )
+
+        assertEquals(setOf("#reqTwo"), tracker.expectedRequirements())
+        assertTrue(failBuildCalled.get())
+    }
+
+    @Test
+    fun `the JUnit configuration parameter is used when no system property is set`() {
+        val tracker = RequirementsCoverageTracker()
+
+        executeTests(
+            listener = RequirementsCoverageListener(
+                tracker = tracker,
+                requirementsCoverageReporter = {},
+                failBuild = {},
+                systemProperty = { null },
+            ),
+            testClasses = arrayOf(PassingRequirementCase::class.java),
+            configurationParameters = mapOf("reqCover.requirementsUris" to "requirements-a.yaml"),
+        )
+
+        assertEquals(setOf("#reqOne"), tracker.expectedRequirements())
+    }
+
+    @Test
     fun `marks only successful annotated tests as verified`() {
         val tracker = RequirementsCoverageTracker()
 

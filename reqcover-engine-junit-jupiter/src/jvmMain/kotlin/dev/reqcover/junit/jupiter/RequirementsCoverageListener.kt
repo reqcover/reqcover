@@ -1,11 +1,10 @@
 package dev.reqcover.junit.jupiter
 
 import dev.reqcover.api.ForRequirement
-import dev.reqcover.engine.CoveragePolicy
+import dev.reqcover.engine.ReqCoverConfiguration
 import dev.reqcover.engine.RequirementsCoverageTracker
 import dev.reqcover.engine.evaluateCoverage
 import dev.reqcover.engine.loadAllRequirements
-import dev.reqcover.engine.parseRequirementsUris
 import dev.reqcover.engine.report
 import org.junit.platform.commons.logging.LoggerFactory
 import org.junit.platform.engine.TestExecutionResult
@@ -19,12 +18,16 @@ class RequirementsCoverageListener @JvmOverloads constructor(
     private val tracker: RequirementsCoverageTracker = RequirementsCoverageTracker(),
     private val requirementsCoverageReporter: (RequirementsCoverageTracker) -> Unit = ::report,
     private val failBuild: () -> Unit = { exitProcess(1) },
+    private val systemProperty: (String) -> String? = System::getProperty,
 ) : TestExecutionListener {
     private val logger = LoggerFactory.getLogger(RequirementsCoverageListener::class.java)
 
+    private fun configuration(testPlan: TestPlan): ReqCoverConfiguration =
+        ReqCoverConfiguration(listOf(systemProperty, { key -> testPlan.configurationParameters.get(key).orElse(null) }))
+
     override fun testPlanExecutionStarted(testPlan: TestPlan) {
-        val config = testPlan.configurationParameters
-        val removedRequirementsUri = config.get("reqCover.requirementsUri").orElse(null)
+        val config = configuration(testPlan)
+        val removedRequirementsUri = config.value("reqCover.requirementsUri")
         if (removedRequirementsUri != null) {
             logger.error {
                 "The reqCover.requirementsUri configuration parameter has been removed. " +
@@ -33,7 +36,7 @@ class RequirementsCoverageListener @JvmOverloads constructor(
             failBuild()
             return
         }
-        val requirementsUris = parseRequirementsUris(config.get("reqCover.requirementsUris").orElse(null) ?: "")
+        val requirementsUris = config.requirementsUris()
         if (requirementsUris.isEmpty()) {
             logger.warn {
                 """ReqCover is on the classpath, but no requirements specification has been provided.
@@ -78,11 +81,7 @@ This will enable ReqCover to check the requirements coverage against your requir
             logger.warn { "The following covered requirements are not defined in the requirements specification: ${tracker.unexpectedRequirements()}" }
         }
 
-        val config = testPlan.configurationParameters
-        val policy = CoveragePolicy.parse(
-            minimumRequiredCoveragePercent = config.get("reqCover.minimumRequiredCoveragePercent").orElse(null),
-            failIfBelowMinimum = config.get("reqCover.failIfBelowMinimum").orElse(null),
-        )
+        val policy = configuration(testPlan).coveragePolicy()
         val outcome = evaluateCoverage(tracker, policy)
         val coverage = outcome.coveragePercent
         val minimumRequiredCoveragePercent = policy.minimumRequiredCoveragePercent
