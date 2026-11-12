@@ -35,6 +35,7 @@ data class RequirementsLoadFailure(val uri: String, val cause: Exception) {
 data class RequirementsLoadResult(
     val requirements: Set<String>,
     val failures: List<RequirementsLoadFailure>,
+    val urisWithoutRequirements: List<String> = emptyList(),
 )
 
 fun loadAllRequirements(
@@ -43,7 +44,11 @@ fun loadAllRequirements(
 ): RequirementsLoadResult =
     uris.fold(RequirementsLoadResult(emptySet(), emptyList())) { result, uri ->
         try {
-            result.copy(requirements = result.requirements + load(uri))
+            val requirements = load(uri)
+            result.copy(
+                requirements = result.requirements + requirements,
+                urisWithoutRequirements = result.urisWithoutRequirements + listOfNotNull(uri.takeIf { requirements.isEmpty() }),
+            )
         } catch (e: Exception) {
             result.copy(failures = result.failures + RequirementsLoadFailure(uri, e))
         }
