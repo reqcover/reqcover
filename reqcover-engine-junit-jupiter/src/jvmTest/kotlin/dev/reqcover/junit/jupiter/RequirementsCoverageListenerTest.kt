@@ -6,6 +6,13 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.DynamicTest
+import org.junit.jupiter.api.DynamicTest.dynamicTest
+import org.junit.jupiter.api.RepeatedTest
+import org.junit.jupiter.api.RepetitionInfo
+import org.junit.jupiter.api.TestFactory
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.junit.jupiter.api.Test
 import org.junit.platform.engine.discovery.DiscoverySelectors.selectClass
 import org.junit.platform.launcher.core.LauncherConfig
@@ -119,6 +126,28 @@ class RequirementsCoverageListenerTest {
     }
 
     @Test
+    fun `a parameterized, repeated or factory test whose runs all fail does not cover its requirement`() {
+        val tracker = verifiedBy(FailingParameterizedCase::class.java, FailingRepeatedCase::class.java, FailingFactoryCase::class.java)
+
+        assertEquals(emptySet<String>(), tracker.verifiedRequirements())
+    }
+
+    @Test
+    fun `one passing run of a parameterized test covers its requirement`() {
+        assertEquals(setOf("#paramReq"), verifiedBy(PartlyPassingParameterizedCase::class.java).verifiedRequirements())
+    }
+
+    @Test
+    fun `one passing run of a repeated test covers its requirement`() {
+        assertEquals(setOf("#repeatedReq"), verifiedBy(PartlyPassingRepeatedCase::class.java).verifiedRequirements())
+    }
+
+    @Test
+    fun `one passing dynamic test of a test factory covers its requirement`() {
+        assertEquals(setOf("#factoryReq"), verifiedBy(PartlyPassingFactoryCase::class.java).verifiedRequirements())
+    }
+
+    @Test
     fun `fails when a configured requirements URI cannot be found`() {
         val failBuildCalled = AtomicBoolean(false)
 
@@ -213,6 +242,16 @@ class RequirementsCoverageListenerTest {
         assertTrue(failBuildCalled.get())
     }
 
+    private fun verifiedBy(vararg testClasses: Class<*>): RequirementsCoverageTracker {
+        val tracker = RequirementsCoverageTracker()
+        executeTests(
+            listener = RequirementsCoverageListener(tracker = tracker, requirementsCoverageReporter = {}, failBuild = {}),
+            testClasses = arrayOf(*testClasses),
+            configurationParameters = mapOf("reqCover.requirementsUris" to "requirements-a.yaml"),
+        )
+        return tracker
+    }
+
     private fun capturedWarnings(action: () -> Unit): List<String> {
         val logger = Logger.getLogger(RequirementsCoverageListener::class.java.name)
         val records = mutableListOf<LogRecord>()
@@ -277,5 +316,59 @@ class RequirementsCoverageListenerTest {
         @Test
         fun passes() {
         }
+    }
+
+    @Disabled("Executed via the embedded JUnit launcher in RequirementsCoverageListenerTest")
+    class FailingParameterizedCase {
+        @ParameterizedTest
+        @ValueSource(ints = [1, 2])
+        @ForRequirement("#paramReq")
+        fun fails(i: Int) {
+            throw AssertionError("boom $i")
+        }
+    }
+
+    @Disabled("Executed via the embedded JUnit launcher in RequirementsCoverageListenerTest")
+    class PartlyPassingParameterizedCase {
+        @ParameterizedTest
+        @ValueSource(ints = [1, 2])
+        @ForRequirement("#paramReq")
+        fun passesOnlyForTwo(i: Int) {
+            if (i != 2) throw AssertionError("boom $i")
+        }
+    }
+
+    @Disabled("Executed via the embedded JUnit launcher in RequirementsCoverageListenerTest")
+    class FailingRepeatedCase {
+        @RepeatedTest(2)
+        @ForRequirement("#repeatedReq")
+        fun fails() {
+            throw AssertionError("boom")
+        }
+    }
+
+    @Disabled("Executed via the embedded JUnit launcher in RequirementsCoverageListenerTest")
+    class PartlyPassingRepeatedCase {
+        @RepeatedTest(2)
+        @ForRequirement("#repeatedReq")
+        fun passesOnlyTheSecondTime(repetitionInfo: RepetitionInfo) {
+            if (repetitionInfo.currentRepetition != 2) throw AssertionError("boom")
+        }
+    }
+
+    @Disabled("Executed via the embedded JUnit launcher in RequirementsCoverageListenerTest")
+    class FailingFactoryCase {
+        @TestFactory
+        @ForRequirement("#factoryReq")
+        fun fails(): List<DynamicTest> =
+            listOf(1, 2).map { i -> dynamicTest("fails $i") { throw AssertionError("boom $i") } }
+    }
+
+    @Disabled("Executed via the embedded JUnit launcher in RequirementsCoverageListenerTest")
+    class PartlyPassingFactoryCase {
+        @TestFactory
+        @ForRequirement("#factoryReq")
+        fun passesOnlyForTwo(): List<DynamicTest> =
+            listOf(1, 2).map { i -> dynamicTest("run $i") { if (i != 2) throw AssertionError("boom $i") } }
     }
 }

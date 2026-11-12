@@ -56,7 +56,7 @@ This will enable ReqCover to check the requirements coverage against your requir
     }
 
     override fun executionFinished(testIdentifier: TestIdentifier, testExecutionResult: TestExecutionResult) {
-        if (testExecutionResult.status == TestExecutionResult.Status.SUCCESSFUL) {
+        if (testIdentifier.isTest && testExecutionResult.status == TestExecutionResult.Status.SUCCESSFUL) {
             val source = testIdentifier.source.orElse(null)
             if (source is MethodSource) {
                 val annotations = source.javaMethod.getAnnotationsByType(ForRequirement::class.java)
