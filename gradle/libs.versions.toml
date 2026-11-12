@@ -5,7 +5,7 @@ cucumber = "7.31.0"
 jackson = "3.2.4"
 junit-jupiter = "6.1.3"
 junit-platform = "6.1.3"
-kotlin = "2.4.10"
+kotlin = "2.4.21"
 testng = "7.12.0"
 xmlunit = "2.13.0"
 
