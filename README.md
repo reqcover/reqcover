@@ -51,6 +51,11 @@ Maven Surefire:
 
 Annotate TestNG tests with `@ForRequirement` exactly as with JUnit; only passing tests count as verifying their requirements.
 
+## When a requirement counts as covered
+A requirement is covered when at least one test annotated with `@ForRequirement` for it passes.
+For parameterized, repeated (`@RepeatedTest`) and data-provider tests, and for the dynamic tests of a `@TestFactory`, one passing run is enough; failing, skipped and aborted runs do not count.
+This rule is provisional and may change based on user feedback.
+
 ## Requirements file problems
 These rules apply to JUnit and TestNG alike:
 
