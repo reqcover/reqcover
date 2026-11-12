@@ -56,6 +56,15 @@ A requirement is covered when at least one test annotated with `@ForRequirement`
 For parameterized, repeated (`@RepeatedTest`) and data-provider tests, and for the dynamic tests of a `@TestFactory`, one passing run is enough; failing, skipped and aborted runs do not count.
 This rule is provisional and may change based on user feedback.
 
+## Configuration precedence
+Every ReqCover setting (`reqCover.requirementsUris`, `reqCover.minimumRequiredCoveragePercent`, `reqCover.failIfBelowMinimum`) is looked up in this order; the first place that sets it wins:
+
+| Order | JUnit 5 Jupiter | TestNG |
+|---|---|---|
+| 1 | JVM system property (`-DreqCover.…`) | JVM system property (`-DreqCover.…`) |
+| 2 | JUnit configuration parameter (`junit-platform.properties`, launcher or build tool configuration) | — |
+| 3 | Built-in default | Built-in default |
+
 ## Requirements file problems
 These rules apply to JUnit and TestNG alike:
 
