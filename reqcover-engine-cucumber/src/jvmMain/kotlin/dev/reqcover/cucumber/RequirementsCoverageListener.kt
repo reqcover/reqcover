@@ -20,10 +20,11 @@ class RequirementsCoverageListener @JvmOverloads constructor(
     private val requirementsCoverageReporter: (RequirementsCoverageTracker, String) -> Unit = ::report,
     private val failBuild: () -> Unit = { exitProcess(1) },
     private val systemProperty: (String) -> String? = System::getProperty,
-    private val cucumberProperty: (String) -> String? = classpathCucumberProperties()::getProperty,
+    private val cucumberProperty: (String) -> String? = classpathProperties("cucumber.properties")::getProperty,
+    private val junitPlatformProperty: (String) -> String? = classpathProperties("junit-platform.properties")::getProperty,
 ) : ConcurrentEventListener {
     private val logger = System.getLogger(RequirementsCoverageListener::class.java.name)
-    private val configuration = ReqCoverConfiguration(listOf(systemProperty, cucumberProperty))
+    private val configuration = ReqCoverConfiguration(listOf(systemProperty, cucumberProperty, junitPlatformProperty))
     private val tagPrefix = configuration.value(TAG_PREFIX) ?: DEFAULT_TAG_PREFIX
 
     private val log = object : CoverageRunLog {
@@ -43,7 +44,7 @@ class RequirementsCoverageListener @JvmOverloads constructor(
         if (requirementsUris.isEmpty()) {
             log.warning(
                 """ReqCover is on the classpath, but no requirements specification has been provided.
-The recommended solution is to add the following line to your cucumber.properties file:
+The recommended solution is to add the following line to your cucumber.properties or junit-platform.properties file:
 reqCover.requirementsUris=path/to/your/requirements
 or to pass -DreqCover.requirementsUris=path/to/your/requirements to the JVM running your Cucumber tests.
 This will enable ReqCover to check the requirements coverage against your requirements specification.
@@ -81,11 +82,11 @@ This will enable ReqCover to check the requirements coverage against your requir
         const val TAG_PREFIX = "reqCover.cucumber.tagPrefix"
         const val DEFAULT_TAG_PREFIX = "@req:"
         const val CHECK_REQUIREMENTS_URIS =
-            "Check the reqCover.requirementsUris system property or cucumber.properties setting."
+            "Check the reqCover.requirementsUris system property, cucumber.properties or junit-platform.properties setting."
 
-        fun classpathCucumberProperties(): Properties =
+        fun classpathProperties(name: String): Properties =
             Properties().apply {
-                RequirementsCoverageListener::class.java.classLoader.getResourceAsStream("cucumber.properties")?.use(::load)
+                RequirementsCoverageListener::class.java.classLoader.getResourceAsStream(name)?.use(::load)
             }
     }
 }

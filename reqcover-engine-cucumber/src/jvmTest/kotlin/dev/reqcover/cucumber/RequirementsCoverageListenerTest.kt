@@ -83,6 +83,34 @@ class RequirementsCoverageListenerTest {
     }
 
     @Test
+    fun `reads settings from junit-platform properties when nothing else sets them`() {
+        val tracker = RequirementsCoverageTracker()
+
+        run(
+            listener(tracker = tracker, junitPlatformProperties = mapOf("reqCover.requirementsUris" to "requirements-a.yaml")),
+            "coverage.feature",
+        )
+
+        assertEquals(setOf("#reqOne"), tracker.expectedRequirements())
+    }
+
+    @Test
+    fun `cucumber properties take precedence over junit-platform properties`() {
+        val tracker = RequirementsCoverageTracker()
+
+        run(
+            listener(
+                tracker = tracker,
+                cucumberProperties = mapOf("reqCover.requirementsUris" to "requirements-b.yaml"),
+                junitPlatformProperties = mapOf("reqCover.requirementsUris" to "requirements-a.yaml"),
+            ),
+            "coverage.feature",
+        )
+
+        assertEquals(setOf("#reqTwo"), tracker.expectedRequirements())
+    }
+
+    @Test
     fun `fails when a configured requirements file cannot be found`() {
         val failBuildCalled = AtomicBoolean(false)
 
@@ -154,6 +182,7 @@ class RequirementsCoverageListenerTest {
         failBuild: () -> Unit = {},
         systemProperties: Map<String, String> = emptyMap(),
         cucumberProperties: Map<String, String> = emptyMap(),
+        junitPlatformProperties: Map<String, String> = emptyMap(),
     ): RequirementsCoverageListener =
         RequirementsCoverageListener(
             tracker = tracker,
@@ -161,6 +190,7 @@ class RequirementsCoverageListenerTest {
             failBuild = failBuild,
             systemProperty = systemProperties::get,
             cucumberProperty = cucumberProperties::get,
+            junitPlatformProperty = junitPlatformProperties::get,
         )
 
     private fun run(listener: RequirementsCoverageListener, vararg features: String) {
