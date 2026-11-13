@@ -75,6 +75,13 @@ Configure the repository credentials in `~/.m2/settings.xml` under the server id
 </dependencies>
 ```
 
+With Maven, set `reqCover.reportsDir` so the reports go to `target/` instead of `build/`, for example in the Surefire configuration:
+```xml
+<systemPropertyVariables>
+    <reqCover.reportsDir>${project.build.directory}/reqcover</reqCover.reportsDir>
+</systemPropertyVariables>
+```
+
 Annotate tests with `@ForRequirement`; only passing tests count as verifying their requirements.
 A test can carry several `@ForRequirement` annotations.
 
@@ -105,6 +112,7 @@ reqCover.minimumRequiredCoveragePercent=100
 | `reqCover.requirementsUris` | Comma-separated classpath locations of the requirements specifications | none (a warning is logged) |
 | `reqCover.minimumRequiredCoveragePercent` | Minimum required requirements coverage in percent | `0.0` |
 | `reqCover.failIfBelowMinimum` | Whether to fail the build if the coverage is below the minimum | `true` |
+| `reqCover.reportsDir` | Directory for the HTML and XML reports, relative to the working directory | `build/reports/tests/reqcover` |
 
 The former `reqCover.requirementsUri` (singular) setting has been removed; using it fails the build.
 
@@ -119,6 +127,7 @@ ReqCover is configured through JVM system properties or `testng.xml` suite param
 | `reqCover.requirementsUris` | Comma-separated classpath locations of the requirements specifications | none (a warning is logged) |
 | `reqCover.minimumRequiredCoveragePercent` | Minimum required requirements coverage in percent | `0.0` |
 | `reqCover.failIfBelowMinimum` | Whether to fail the build if the coverage is below the minimum | `true` |
+| `reqCover.reportsDir` | Directory for the HTML and XML reports, relative to the working directory | `build/reports/tests/reqcover` |
 
 Gradle:
 ```kotlin
@@ -138,6 +147,7 @@ Maven Surefire:
         <systemPropertyVariables>
             <reqCover.requirementsUris>requirements.yaml</reqCover.requirementsUris>
             <reqCover.minimumRequiredCoveragePercent>100</reqCover.minimumRequiredCoveragePercent>
+            <reqCover.reportsDir>${project.build.directory}/reqcover</reqCover.reportsDir>
         </systemPropertyVariables>
     </configuration>
 </plugin>
@@ -152,7 +162,7 @@ Maven Surefire:
 </suite>
 ```
 
-With several suites, the requirements URIs of all suites are combined, and the strictest coverage settings apply: the highest minimum, and the build fails if any suite asks for that (a suite that does not set `reqCover.failIfBelowMinimum` counts as `true`).
+With several suites, `reqCover.reportsDir` is taken from the first suite that sets it, the requirements URIs of all suites are combined, and the strictest coverage settings apply: the highest minimum, and the build fails if any suite asks for that (a suite that does not set `reqCover.failIfBelowMinimum` counts as `true`).
 This rule is provisional and may change based on user feedback.
 
 Annotate TestNG tests with `@ForRequirement` exactly as with JUnit; only passing tests count as verifying their requirements.
@@ -163,7 +173,7 @@ For parameterized, repeated (`@RepeatedTest`) and data-provider tests, and for t
 This rule is provisional and may change based on user feedback.
 
 ## Configuration precedence
-Every ReqCover setting (`reqCover.requirementsUris`, `reqCover.minimumRequiredCoveragePercent`, `reqCover.failIfBelowMinimum`) is looked up in this order; the first place that sets it wins:
+Every ReqCover setting (`reqCover.requirementsUris`, `reqCover.minimumRequiredCoveragePercent`, `reqCover.failIfBelowMinimum`, `reqCover.reportsDir`) is looked up in this order; the first place that sets it wins:
 
 | Order | JUnit 5 Jupiter | TestNG |
 |---|---|---|
