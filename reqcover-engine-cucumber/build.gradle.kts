@@ -1,5 +1,6 @@
 plugins {
     kotlin("multiplatform")
+    id("git-publishing")
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -12,10 +13,11 @@ kotlin {
             api(project(":reqcover-engine"))
         }
         jvmMain.dependencies {
-            implementation(libs.cucumber.core)
-            implementation(libs.cucumber.java)
+            compileOnly(libs.cucumber.plugin)
         }
         jvmTest.dependencies {
+            implementation(libs.cucumber.core)
+            implementation(libs.cucumber.java)
             implementation(project(":reqcover-source-openapi"))
             implementation(libs.junit.jupiter.engine)
             implementation(libs.bundles.junit)
