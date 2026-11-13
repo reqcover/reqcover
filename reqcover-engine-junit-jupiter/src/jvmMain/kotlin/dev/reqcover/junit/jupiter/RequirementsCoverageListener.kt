@@ -3,7 +3,8 @@ package dev.reqcover.junit.jupiter
 import dev.reqcover.api.ForRequirement
 import dev.reqcover.engine.ReqCoverConfiguration
 import dev.reqcover.engine.RequirementsCoverageTracker
-import dev.reqcover.engine.evaluateCoverage
+import dev.reqcover.engine.CoverageRunLog
+import dev.reqcover.engine.finishCoverageRun
 import dev.reqcover.engine.loadAllRequirements
 import dev.reqcover.engine.report
 import org.junit.platform.commons.logging.LoggerFactory
@@ -71,31 +72,16 @@ This will enable ReqCover to check the requirements coverage against your requir
     }
 
     override fun testPlanExecutionFinished(testPlan: TestPlan) {
-        if (tracker.unverifiedRequirements().isNotEmpty()) {
-            logger.warn { "The following requirements were not covered by any test: ${tracker.unverifiedRequirements()}" }
-        } else {
-            logger.info { "All requirements are covered by tests." }
-        }
-
-        if (tracker.unexpectedRequirements().isNotEmpty()) {
-            logger.warn { "The following covered requirements are not defined in the requirements specification: ${tracker.unexpectedRequirements()}" }
-        }
-
-        val policy = configuration(testPlan).coveragePolicy()
-        val outcome = evaluateCoverage(tracker, policy)
-        val coverage = outcome.coveragePercent
-        val minimumRequiredCoveragePercent = policy.minimumRequiredCoveragePercent
-        logger.info { "Requirements coverage: ${outcome.coveredRequirements} out of ${outcome.expectedRequirements} = ${"%.1f".format(coverage)}%" }
-        requirementsCoverageReporter(tracker)
-
-        if (outcome.isBelowMinimum) {
-            logger.error { "Requirements coverage is below the minimum required coverage of $minimumRequiredCoveragePercent%. Actual coverage: ${"%.1f".format(coverage)}%" }
-            if (outcome.shouldFailBuild) {
-                logger.error { "Exiting with error code 1 due to insufficient requirements coverage." }
-                failBuild()
-            }
-        } else {
-            logger.info { "Requirements coverage meets the minimum required coverage of $minimumRequiredCoveragePercent%. Actual coverage: ${"%.1f".format(coverage)}%" }
-        }
+        finishCoverageRun(
+            tracker = tracker,
+            policy = configuration(testPlan).coveragePolicy(),
+            report = requirementsCoverageReporter,
+            failBuild = failBuild,
+            log = object : CoverageRunLog {
+                override fun info(message: String) = logger.info { message }
+                override fun warning(message: String) = logger.warn { message }
+                override fun error(message: String) = logger.error { message }
+            },
+        )
     }
 }

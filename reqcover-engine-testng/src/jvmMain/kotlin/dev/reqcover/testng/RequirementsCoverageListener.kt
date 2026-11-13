@@ -3,7 +3,8 @@ package dev.reqcover.testng
 import dev.reqcover.api.ForRequirement
 import dev.reqcover.engine.ReqCoverConfiguration
 import dev.reqcover.engine.RequirementsCoverageTracker
-import dev.reqcover.engine.evaluateCoverage
+import dev.reqcover.engine.CoverageRunLog
+import dev.reqcover.engine.finishCoverageRun
 import dev.reqcover.engine.loadAllRequirements
 import dev.reqcover.engine.report
 import org.testng.IExecutionListener
@@ -54,31 +55,16 @@ This will enable ReqCover to check the requirements coverage against your requir
     }
 
     override fun onExecutionFinish() {
-        if (tracker.unverifiedRequirements().isNotEmpty()) {
-            logger.warning("The following requirements were not covered by any test: ${tracker.unverifiedRequirements()}")
-        } else {
-            logger.info("All requirements are covered by tests.")
-        }
-
-        if (tracker.unexpectedRequirements().isNotEmpty()) {
-            logger.warning("The following covered requirements are not defined in the requirements specification: ${tracker.unexpectedRequirements()}")
-        }
-
-        val policy = configuration.coveragePolicy()
-        val outcome = evaluateCoverage(tracker, policy)
-        val coverage = "%.1f".format(outcome.coveragePercent)
-        val minimumRequiredCoveragePercent = policy.minimumRequiredCoveragePercent
-        logger.info("Requirements coverage: ${outcome.coveredRequirements} out of ${outcome.expectedRequirements} = $coverage%")
-        requirementsCoverageReporter(tracker)
-
-        if (outcome.isBelowMinimum) {
-            logger.severe("Requirements coverage is below the minimum required coverage of $minimumRequiredCoveragePercent%. Actual coverage: $coverage%")
-            if (outcome.shouldFailBuild) {
-                logger.severe("Exiting with error code 1 due to insufficient requirements coverage.")
-                failBuild()
-            }
-        } else {
-            logger.info("Requirements coverage meets the minimum required coverage of $minimumRequiredCoveragePercent%. Actual coverage: $coverage%")
-        }
+        finishCoverageRun(
+            tracker = tracker,
+            policy = configuration.coveragePolicy(),
+            report = requirementsCoverageReporter,
+            failBuild = failBuild,
+            log = object : CoverageRunLog {
+                override fun info(message: String) = logger.info(message)
+                override fun warning(message: String) = logger.warning(message)
+                override fun error(message: String) = logger.severe(message)
+            },
+        )
     }
 }
