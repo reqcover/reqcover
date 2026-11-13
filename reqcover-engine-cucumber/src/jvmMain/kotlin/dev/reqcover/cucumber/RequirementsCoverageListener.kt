@@ -1,91 +1,91 @@
 package dev.reqcover.cucumber
 
+import dev.reqcover.engine.CoverageRunLog
+import dev.reqcover.engine.ReqCoverConfiguration
 import dev.reqcover.engine.RequirementsCoverageTracker
-import dev.reqcover.engine.loadRequirements
+import dev.reqcover.engine.finishCoverageRun
+import dev.reqcover.engine.loadAllRequirements
+import dev.reqcover.engine.report
 import io.cucumber.plugin.ConcurrentEventListener
 import io.cucumber.plugin.event.EventPublisher
+import io.cucumber.plugin.event.Status
 import io.cucumber.plugin.event.TestCaseFinished
 import io.cucumber.plugin.event.TestRunFinished
 import io.cucumber.plugin.event.TestRunStarted
 import java.util.Properties
 import kotlin.system.exitProcess
 
-class RequirementsCoverageListener : ConcurrentEventListener {
-    private val tracker = RequirementsCoverageTracker()
+class RequirementsCoverageListener @JvmOverloads constructor(
+    private val tracker: RequirementsCoverageTracker = RequirementsCoverageTracker(),
+    private val requirementsCoverageReporter: (RequirementsCoverageTracker, String) -> Unit = ::report,
+    private val failBuild: () -> Unit = { exitProcess(1) },
+    private val systemProperty: (String) -> String? = System::getProperty,
+    private val cucumberProperty: (String) -> String? = classpathCucumberProperties()::getProperty,
+) : ConcurrentEventListener {
+    private val logger = System.getLogger(RequirementsCoverageListener::class.java.name)
+    private val configuration = ReqCoverConfiguration(listOf(systemProperty, cucumberProperty))
+    private val tagPrefix = configuration.value(TAG_PREFIX) ?: DEFAULT_TAG_PREFIX
 
-    private val logger = System.getLogger("reqCover")
-
-    private val config = RequirementsCoverageListener::class.java.getClassLoader().getResourceAsStream("cucumber.properties").use {
-        Properties().apply {
-            load(it)
-        }
+    private val log = object : CoverageRunLog {
+        override fun info(message: String) = logger.log(System.Logger.Level.INFO, message)
+        override fun warning(message: String) = logger.log(System.Logger.Level.WARNING, message)
+        override fun error(message: String) = logger.log(System.Logger.Level.ERROR, message)
     }
 
     override fun setEventPublisher(publisher: EventPublisher) {
-        with (publisher) {
-            registerHandlerFor(TestRunStarted::class.java, ::onRunStarted)
-            registerHandlerFor(TestCaseFinished::class.java, ::onCaseFinished)
-            registerHandlerFor(TestRunFinished::class.java,  ::onRunFinished)
-        }
+        publisher.registerHandlerFor(TestRunStarted::class.java) { onRunStarted() }
+        publisher.registerHandlerFor(TestCaseFinished::class.java, ::onTestCaseFinished)
+        publisher.registerHandlerFor(TestRunFinished::class.java) { onRunFinished() }
     }
 
-    fun onRunStarted(event: TestRunStarted) {
-        val requirementsUri: String? = config.getProperty("reqCover.requirementsUri")
-        val requirementsUris: String? = config.getProperty("reqCover.requirementsUris")
-        if (requirementsUri == null && requirementsUris == null) {
-            logger.warn(
+    private fun onRunStarted() {
+        val requirementsUris = configuration.requirementsUris()
+        if (requirementsUris.isEmpty()) {
+            log.warning(
                 """ReqCover is on the classpath, but no requirements specification has been provided.
-The recommended solution is to add the following line to your junit-platform.properties file:
+The recommended solution is to add the following line to your cucumber.properties file:
 reqCover.requirementsUris=path/to/your/requirements
+or to pass -DreqCover.requirementsUris=path/to/your/requirements to the JVM running your Cucumber tests.
 This will enable ReqCover to check the requirements coverage against your requirements specification.
 """
             )
             return
         }
-        if (requirementsUri != null)
-            tracker.expectAll(loadRequirements(requirementsUri))
-        if (requirementsUris != null)
-            for (uri in requirementsUris.split(",").map { it.trim() })
-                tracker.expectAll(loadRequirements(uri))
+        val loaded = loadAllRequirements(requirementsUris)
+        tracker.expectAll(loaded.requirements)
+        loaded.failures.forEach { failure -> log.error("${failure.message}. $CHECK_REQUIREMENTS_URIS") }
+        loaded.urisWithoutRequirements.forEach { uri ->
+            log.warning("Requirements file at URI: $uri contains no requirements. $CHECK_REQUIREMENTS_URIS")
+        }
+        if (loaded.failures.isNotEmpty()) failBuild()
     }
 
-    fun onCaseFinished(event: TestCaseFinished) {
-        if (event.result.status.isOk) {
-            val tags = event.testCase.tags
-            for (tag in tags)
-                logger.trace(tag)
-        }
+    private fun onTestCaseFinished(event: TestCaseFinished) {
+        if (event.result.status != Status.PASSED) return
+        event.testCase.tags
+            .filter { it.startsWith(tagPrefix) }
+            .forEach { tracker.verified(it.removePrefix(tagPrefix)) }
     }
 
-    fun onRunFinished(event: TestRunFinished) {
-        if (tracker.unverifiedRequirements().isNotEmpty()) {
-            logger.warn("The following requirements were not covered by any test: ${tracker.unverifiedRequirements()}")
-        } else {
-            logger.info("All requirements are covered by tests.")
-        }
+    private fun onRunFinished() {
+        finishCoverageRun(
+            tracker = tracker,
+            policy = configuration.coveragePolicy(),
+            report = { requirementsCoverageReporter(it, configuration.reportsDirectory()) },
+            failBuild = failBuild,
+            log = log,
+        )
+    }
 
-        if (tracker.unexpectedRequirements().isNotEmpty()) {
-            logger.warn("The following covered requirements are not defined in the requirements specification: ${tracker.unexpectedRequirements()}")
-        }
+    private companion object {
+        const val TAG_PREFIX = "reqCover.cucumber.tagPrefix"
+        const val DEFAULT_TAG_PREFIX = "@req:"
+        const val CHECK_REQUIREMENTS_URIS =
+            "Check the reqCover.requirementsUris system property or cucumber.properties setting."
 
-        val coverage = (tracker.verifiedRequirements().size.toDouble() / tracker.expectedRequirements().size) * 100
-        logger.info("Requirements coverage: ${tracker.verifiedRequirements().size} out of ${tracker.expectedRequirements().size} = ${"%.1f".format(coverage)}%")
-
-        val minimumRequiredCoveragePercent = config.getProperty("reqCover.minimumRequiredCoveragePercent")?.toDoubleOrNull() ?: 0.0
-        if (coverage < minimumRequiredCoveragePercent) {
-            logger.error("Requirements coverage is below the minimum required coverage of $minimumRequiredCoveragePercent%. Actual coverage: ${"%.1f".format(coverage)}%")
-            val failIfBelowMinimum = config.getProperty("reqCover.failIfBelowMinimum").toBooleanStrictOrNull() ?: true
-            if (failIfBelowMinimum) {
-                logger.error("Exiting with error code 1 due to insufficient requirements coverage.")
-                exitProcess(1)
+        fun classpathCucumberProperties(): Properties =
+            Properties().apply {
+                RequirementsCoverageListener::class.java.classLoader.getResourceAsStream("cucumber.properties")?.use(::load)
             }
-        } else {
-            logger.info("Requirements coverage meets the minimum required coverage of $minimumRequiredCoveragePercent%. Actual coverage: ${"%.1f".format(coverage)}%")
-        }
     }
 }
-
-fun System.Logger.error(msg: String): Unit = this.log(System.Logger.Level.ERROR, msg)
-fun System.Logger.info(msg: String): Unit = this.log(System.Logger.Level.INFO, msg)
-fun System.Logger.warn(msg: String): Unit = this.log(System.Logger.Level.WARNING, msg)
-fun System.Logger.trace(msg: String): Unit = this.log(System.Logger.Level.TRACE, msg)
