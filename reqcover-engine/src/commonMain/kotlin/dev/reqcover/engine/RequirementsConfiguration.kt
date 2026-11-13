@@ -1,5 +1,7 @@
 package dev.reqcover.engine
 
+const val DEFAULT_REPORTS_DIRECTORY = "build/reports/tests/reqcover"
+
 fun parseRequirementsUris(requirementsUris: String): List<String> =
     requirementsUris.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 

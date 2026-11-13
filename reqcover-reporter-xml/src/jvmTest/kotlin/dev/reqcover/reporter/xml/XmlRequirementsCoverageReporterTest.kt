@@ -92,4 +92,15 @@ class XmlRequirementsCoverageReporterTest {
         reporter.report(tracker, out)
         assertThat(out.toString()).and(expected).ignoreWhitespace().areIdentical()
     }
+
+    @Test
+    fun `writes the report into the given reports directory, creating it if needed`(@org.junit.jupiter.api.io.TempDir tempDir: java.nio.file.Path) {
+        val reportsDirectory = tempDir.resolve("target").resolve("reqcover")
+        val tracker = RequirementsCoverageTracker().apply { expect("REQ-1") }
+
+        XmlRequirementsCoverageReporter().report(tracker, reportsDirectory.toString())
+
+        val written = reportsDirectory.resolve("requirements-coverage.xml")
+        org.junit.jupiter.api.Assertions.assertTrue(java.nio.file.Files.readString(written).contains("REQ-1"))
+    }
 }

@@ -1,5 +1,6 @@
 package dev.reqcover.reporter.html
 
+import dev.reqcover.engine.DEFAULT_REPORTS_DIRECTORY
 import dev.reqcover.engine.RequirementsCoverageTracker
 import dev.reqcover.engine.spi.RequirementsCoverageReporter
 import org.w3c.dom.Element
@@ -15,12 +16,11 @@ class HtmlRequirementsCoverageReporter : RequirementsCoverageReporter {
         const val XMLNS_XHTML = "http://www.w3.org/1999/xhtml"
     }
 
-    override fun report(tracker: RequirementsCoverageTracker) {
-        val path = Path.of(System.getProperty("user.dir"), "build", "reports", "tests", "reqcover", "requirements-coverage.html")
-        val parentDir = path.parent
-        if (parentDir != null && !parentDir.toFile().exists())
-            Files.createDirectories(parentDir)
-        Files.newOutputStream(path).use { outputStream ->
+    override fun report(tracker: RequirementsCoverageTracker) = report(tracker, DEFAULT_REPORTS_DIRECTORY)
+
+    override fun report(tracker: RequirementsCoverageTracker, reportsDirectory: String) {
+        val directory = Files.createDirectories(Path.of(reportsDirectory))
+        Files.newOutputStream(directory.resolve("requirements-coverage.html")).use { outputStream ->
             report(tracker, outputStream)
         }
     }
