@@ -18,9 +18,9 @@ ReqCover consists of the following components:
 Add `reqcover-engine-testng` and a requirements source (for example `reqcover-source-openapi`) to the test classpath.
 The listener registers itself automatically; no `@Listeners` annotation or `testng.xml` entry is needed.
 
-TestNG has no equivalent of `junit-platform.properties`, so ReqCover is configured through JVM system properties:
+ReqCover is configured through JVM system properties or `testng.xml` suite parameters:
 
-| System property | Description | Default |
+| Setting | Description | Default |
 |---|---|---|
 | `reqCover.requirementsUris` | Comma-separated classpath locations of the requirements specifications | none (a warning is logged) |
 | `reqCover.minimumRequiredCoveragePercent` | Minimum required requirements coverage in percent | `0.0` |
@@ -49,6 +49,18 @@ Maven Surefire:
 </plugin>
 ```
 
+`testng.xml`:
+```xml
+<suite name="My suite">
+    <parameter name="reqCover.requirementsUris" value="requirements.yaml"/>
+    <parameter name="reqCover.minimumRequiredCoveragePercent" value="100"/>
+    ...
+</suite>
+```
+
+With several suites, the requirements URIs of all suites are combined, and the strictest coverage settings apply: the highest minimum, and the build fails if any suite asks for that (a suite that does not set `reqCover.failIfBelowMinimum` counts as `true`).
+This rule is provisional and may change based on user feedback.
+
 Annotate TestNG tests with `@ForRequirement` exactly as with JUnit; only passing tests count as verifying their requirements.
 
 ## When a requirement counts as covered
@@ -62,7 +74,7 @@ Every ReqCover setting (`reqCover.requirementsUris`, `reqCover.minimumRequiredCo
 | Order | JUnit 5 Jupiter | TestNG |
 |---|---|---|
 | 1 | JVM system property (`-DreqCover.…`) | JVM system property (`-DreqCover.…`) |
-| 2 | JUnit configuration parameter (`junit-platform.properties`, launcher or build tool configuration) | — |
+| 2 | JUnit configuration parameter (`junit-platform.properties`, launcher or build tool configuration) | `testng.xml` suite `<parameter>` |
 | 3 | Built-in default | Built-in default |
 
 ## Requirements file problems
