@@ -75,7 +75,22 @@ Configure the repository credentials in `~/.m2/settings.xml` under the server id
 </dependencies>
 ```
 
-Annotate tests with `@ForRequirement("#requirementId")`; only passing tests count as verifying their requirements.
+Annotate tests with `@ForRequirement`; only passing tests count as verifying their requirements.
+A test can carry several `@ForRequirement` annotations.
+
+Java:
+```java
+@Test
+@ForRequirement(id = "#getUsers/200")
+void listsUsers() { }
+```
+
+Kotlin:
+```kotlin
+@Test
+@ForRequirement("#getUsers/200")
+fun `lists users`() { }
+```
 
 ## JUnit 5 Jupiter
 The listener registers itself automatically through the JUnit Platform.
