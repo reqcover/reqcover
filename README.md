@@ -11,8 +11,87 @@ ReqCover consists of the following components:
 * API for linking test cases with requirements
 * Framework for managing requirements coverage with
   * SPI for loading requirements from external sources
-* JUnit 5 Jupiter extension for tracking and reporting requirements coverage
+* JUnit 5 Jupiter listener for tracking and reporting requirements coverage
 * TestNG listener for tracking and reporting requirements coverage
+
+## Installation
+ReqCover is published to GitHub Packages at `https://maven.pkg.github.com/reqcover/reqcover`.
+GitHub Packages requires authentication even for public packages: use your GitHub username and a personal access token with the `read:packages` scope.
+
+Add to your test classpath:
+* the engine for your test framework: `reqcover-engine-junit-jupiter` or `reqcover-engine-testng`
+* a requirements source: `reqcover-source-openapi`
+* one or more reporters: `reqcover-reporter-html`, `reqcover-reporter-xml`
+
+Gradle (Kotlin DSL):
+```kotlin
+repositories {
+    mavenCentral()
+    maven("https://maven.pkg.github.com/reqcover/reqcover") {
+        credentials {
+            username = providers.gradleProperty("gpr.user").orNull ?: System.getenv("GITHUB_ACTOR")
+            password = providers.gradleProperty("gpr.key").orNull ?: System.getenv("GITHUB_TOKEN")
+        }
+    }
+}
+
+dependencies {
+    testImplementation("dev.reqcover:reqcover-engine-junit-jupiter:0.0.10") // or reqcover-engine-testng
+    testImplementation("dev.reqcover:reqcover-source-openapi:0.0.10")
+    testImplementation("dev.reqcover:reqcover-reporter-html:0.0.10")
+    testImplementation("dev.reqcover:reqcover-reporter-xml:0.0.10")
+}
+```
+
+Maven uses the JVM artifacts, which have a `-jvm` suffix.
+Configure the repository credentials in `~/.m2/settings.xml` under the server id `github`.
+```xml
+<repositories>
+    <repository>
+        <id>github</id>
+        <url>https://maven.pkg.github.com/reqcover/reqcover</url>
+    </repository>
+</repositories>
+
+<dependencies>
+    <dependency>
+        <groupId>dev.reqcover</groupId>
+        <artifactId>reqcover-engine-junit-jupiter-jvm</artifactId> <!-- or reqcover-engine-testng-jvm -->
+        <version>0.0.10</version>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>dev.reqcover</groupId>
+        <artifactId>reqcover-source-openapi-jvm</artifactId>
+        <version>0.0.10</version>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>dev.reqcover</groupId>
+        <artifactId>reqcover-reporter-html-jvm</artifactId>
+        <version>0.0.10</version>
+        <scope>test</scope>
+    </dependency>
+</dependencies>
+```
+
+Annotate tests with `@ForRequirement("#requirementId")`; only passing tests count as verifying their requirements.
+
+## JUnit 5 Jupiter
+The listener registers itself automatically through the JUnit Platform.
+Configure ReqCover in `src/test/resources/junit-platform.properties` (or as JVM system properties, which take precedence):
+```properties
+reqCover.requirementsUris=requirements.yaml
+reqCover.minimumRequiredCoveragePercent=100
+```
+
+| Setting | Description | Default |
+|---|---|---|
+| `reqCover.requirementsUris` | Comma-separated classpath locations of the requirements specifications | none (a warning is logged) |
+| `reqCover.minimumRequiredCoveragePercent` | Minimum required requirements coverage in percent | `0.0` |
+| `reqCover.failIfBelowMinimum` | Whether to fail the build if the coverage is below the minimum | `true` |
+
+The former `reqCover.requirementsUri` (singular) setting has been removed; using it fails the build.
 
 ## TestNG
 Add `reqcover-engine-testng` and a requirements source (for example `reqcover-source-openapi`) to the test classpath.
