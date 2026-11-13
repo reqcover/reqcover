@@ -10,6 +10,13 @@ data class CoveragePolicy(
                 minimumRequiredCoveragePercent = minimumRequiredCoveragePercent?.toDoubleOrNull() ?: 0.0,
                 failIfBelowMinimum = failIfBelowMinimum?.toBoolean() ?: true,
             )
+
+        fun strictest(policies: List<CoveragePolicy>): CoveragePolicy =
+            if (policies.isEmpty()) CoveragePolicy()
+            else CoveragePolicy(
+                minimumRequiredCoveragePercent = policies.maxOf { it.minimumRequiredCoveragePercent },
+                failIfBelowMinimum = policies.any { it.failIfBelowMinimum },
+            )
     }
 }
 

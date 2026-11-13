@@ -94,4 +94,29 @@ class CoverageEvaluationTest {
                 .minimumRequiredCoveragePercent,
         )
     }
+
+    @Test
+    fun `the strictest policy uses the highest minimum`() {
+        assertEquals(
+            CoveragePolicy(minimumRequiredCoveragePercent = 80.0),
+            CoveragePolicy.strictest(listOf(CoveragePolicy(minimumRequiredCoveragePercent = 50.0), CoveragePolicy(minimumRequiredCoveragePercent = 80.0))),
+        )
+    }
+
+    @Test
+    fun `the strictest policy fails the build if any policy does`() {
+        assertEquals(
+            CoveragePolicy(failIfBelowMinimum = true),
+            CoveragePolicy.strictest(listOf(CoveragePolicy(failIfBelowMinimum = false), CoveragePolicy(failIfBelowMinimum = true))),
+        )
+        assertEquals(
+            CoveragePolicy(failIfBelowMinimum = false),
+            CoveragePolicy.strictest(listOf(CoveragePolicy(failIfBelowMinimum = false), CoveragePolicy(failIfBelowMinimum = false))),
+        )
+    }
+
+    @Test
+    fun `the strictest of no policies is the default policy`() {
+        assertEquals(CoveragePolicy(), CoveragePolicy.strictest(emptyList()))
+    }
 }
