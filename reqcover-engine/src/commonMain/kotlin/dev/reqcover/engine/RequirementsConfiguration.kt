@@ -16,7 +16,10 @@ class ReqCoverConfiguration(private val sources: List<(String) -> String?>) {
             failIfBelowMinimum = value(FAIL_IF_BELOW_MINIMUM),
         )
 
+    fun reportsDirectory(): String = value(REPORTS_DIR) ?: DEFAULT_REPORTS_DIRECTORY
+
     companion object {
+        const val REPORTS_DIR = "reqCover.reportsDir"
         const val REQUIREMENTS_URIS = "reqCover.requirementsUris"
         const val MINIMUM_REQUIRED_COVERAGE_PERCENT = "reqCover.minimumRequiredCoveragePercent"
         const val FAIL_IF_BELOW_MINIMUM = "reqCover.failIfBelowMinimum"

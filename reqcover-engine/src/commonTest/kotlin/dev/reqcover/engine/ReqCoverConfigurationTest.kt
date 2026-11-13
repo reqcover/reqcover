@@ -68,4 +68,19 @@ class ReqCoverConfigurationTest {
     fun `the coverage policy uses the defaults when nothing is configured`() {
         assertEquals(CoveragePolicy(), configuration().coveragePolicy())
     }
+
+    @Test
+    fun `the reports directory comes from the first source that has it`() {
+        val config = configuration(
+            mapOf("reqCover.reportsDir" to "target/reqcover"),
+            mapOf("reqCover.reportsDir" to "out/reqcover"),
+        )
+
+        assertEquals("target/reqcover", config.reportsDirectory())
+    }
+
+    @Test
+    fun `the reports directory defaults to the Gradle reports directory`() {
+        assertEquals("build/reports/tests/reqcover", configuration().reportsDirectory())
+    }
 }
