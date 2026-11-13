@@ -20,6 +20,15 @@ class RequirementsCoverageListenerTest {
     }
 
     @Test
+    fun `a requirement tag on the feature applies to its scenarios`() {
+        val tracker = RequirementsCoverageTracker()
+
+        run(listener(tracker = tracker), "feature-tag.feature")
+
+        assertEquals(setOf("#reqOne"), tracker.verifiedRequirements())
+    }
+
+    @Test
     fun `loads the expected requirements from reqCover requirementsUris`() {
         val tracker = RequirementsCoverageTracker()
 
