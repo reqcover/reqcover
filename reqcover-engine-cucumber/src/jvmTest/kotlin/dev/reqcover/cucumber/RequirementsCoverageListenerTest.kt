@@ -132,6 +132,22 @@ class RequirementsCoverageListenerTest {
         assertFalse(failBuildCalled.get())
     }
 
+    @Test
+    fun `Cucumber can create the listener from its class name`() {
+        val options = CommandlineOptionsParser(System.out)
+            .parse(
+                "--plugin", RequirementsCoverageListener::class.java.name,
+                "--glue", "dev.reqcover.cucumber.glue",
+                "classpath:features/untagged.feature",
+            )
+            .build()
+        val runtime = Runtime.builder().withRuntimeOptions(options).build()
+
+        runtime.run()
+
+        assertEquals(0, runtime.exitStatus().toInt())
+    }
+
     private fun listener(
         tracker: RequirementsCoverageTracker = RequirementsCoverageTracker(),
         requirementsCoverageReporter: (RequirementsCoverageTracker, String) -> Unit = { _, _ -> },
