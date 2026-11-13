@@ -17,7 +17,7 @@ import kotlin.system.exitProcess
 
 class RequirementsCoverageListener @JvmOverloads constructor(
     private val tracker: RequirementsCoverageTracker = RequirementsCoverageTracker(),
-    private val requirementsCoverageReporter: (RequirementsCoverageTracker) -> Unit = ::report,
+    private val requirementsCoverageReporter: (RequirementsCoverageTracker, String) -> Unit = ::report,
     private val failBuild: () -> Unit = { exitProcess(1) },
     private val systemProperty: (String) -> String? = System::getProperty,
 ) : TestExecutionListener {
@@ -72,10 +72,11 @@ This will enable ReqCover to check the requirements coverage against your requir
     }
 
     override fun testPlanExecutionFinished(testPlan: TestPlan) {
+        val configuration = configuration(testPlan)
         finishCoverageRun(
             tracker = tracker,
-            policy = configuration(testPlan).coveragePolicy(),
-            report = requirementsCoverageReporter,
+            policy = configuration.coveragePolicy(),
+            report = { requirementsCoverageReporter(it, configuration.reportsDirectory()) },
             failBuild = failBuild,
             log = object : CoverageRunLog {
                 override fun info(message: String) = logger.info { message }

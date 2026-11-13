@@ -167,7 +167,7 @@ class RequirementsCoverageListenerTest {
 
         executeTests(
             listener = listener(
-                requirementsCoverageReporter = { events.add("report") },
+                requirementsCoverageReporter = { _, _ -> events.add("report") },
                 failBuild = { events.add("failBuild") },
                 properties = mapOf(
                     "reqCover.requirementsUris" to "requirements-a.yaml",
@@ -270,7 +270,7 @@ class RequirementsCoverageListenerTest {
         executeTests(
             listener = listener(
                 tracker = tracker,
-                requirementsCoverageReporter = { reportedTrackers.add(it) },
+                requirementsCoverageReporter = { tracker, _ -> reportedTrackers.add(tracker) },
                 properties = mapOf("reqCover.requirementsUris" to "requirements-a.yaml"),
             ),
             testClasses = arrayOf(PassingRequirementCase::class.java),
@@ -278,6 +278,33 @@ class RequirementsCoverageListenerTest {
 
         assertEquals(listOf(tracker), reportedTrackers)
         assertEquals(setOf("#reqOne"), reportedTrackers.single().coveredRequirements())
+    }
+
+    @Test
+    fun `passes the configured reports directory to the reporters`() {
+        val reportsDirectories = mutableListOf<String>()
+
+        executeSuites(
+            listener = listener(
+                requirementsCoverageReporter = { _, reportsDirectory -> reportsDirectories.add(reportsDirectory) },
+                properties = mapOf("reqCover.reportsDir" to "target/reqcover"),
+            ),
+            suites = listOf(suite("a", mapOf("reqCover.requirementsUris" to "requirements-a.yaml"))),
+        )
+
+        assertEquals(listOf("target/reqcover"), reportsDirectories)
+    }
+
+    @Test
+    fun `reads the reports directory from a testng xml suite parameter`() {
+        val reportsDirectories = mutableListOf<String>()
+
+        executeSuites(
+            listener = listener(requirementsCoverageReporter = { _, reportsDirectory -> reportsDirectories.add(reportsDirectory) }),
+            suites = listOf(suite("a", mapOf("reqCover.reportsDir" to "target/reqcover"))),
+        )
+
+        assertEquals(listOf("target/reqcover"), reportsDirectories)
     }
 
     @Test
@@ -416,7 +443,7 @@ class RequirementsCoverageListenerTest {
         properties: Map<String, String> = emptyMap(),
         tracker: RequirementsCoverageTracker = RequirementsCoverageTracker(),
         failBuild: () -> Unit = {},
-        requirementsCoverageReporter: (RequirementsCoverageTracker) -> Unit = {},
+        requirementsCoverageReporter: (RequirementsCoverageTracker, String) -> Unit = { _, _ -> },
     ): RequirementsCoverageListener =
         RequirementsCoverageListener(
             tracker = tracker,

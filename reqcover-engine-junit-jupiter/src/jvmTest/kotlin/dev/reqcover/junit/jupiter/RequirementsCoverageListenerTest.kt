@@ -32,7 +32,7 @@ class RequirementsCoverageListenerTest {
         executeTests(
             listener = RequirementsCoverageListener(
                 tracker = tracker,
-                requirementsCoverageReporter = {},
+                requirementsCoverageReporter = { _, _ -> },
                 failBuild = {},
             ),
             testClasses = arrayOf(PassingRequirementCase::class.java),
@@ -56,7 +56,7 @@ class RequirementsCoverageListenerTest {
         executeTests(
             listener = RequirementsCoverageListener(
                 tracker = tracker,
-                requirementsCoverageReporter = {},
+                requirementsCoverageReporter = { _, _ -> },
                 failBuild = { failBuildCalled.set(true) },
                 systemProperty = mapOf(
                     "reqCover.requirementsUris" to "requirements-b.yaml",
@@ -81,7 +81,7 @@ class RequirementsCoverageListenerTest {
         executeTests(
             listener = RequirementsCoverageListener(
                 tracker = tracker,
-                requirementsCoverageReporter = {},
+                requirementsCoverageReporter = { _, _ -> },
                 failBuild = {},
                 systemProperty = { null },
             ),
@@ -93,13 +93,33 @@ class RequirementsCoverageListenerTest {
     }
 
     @Test
+    fun `passes the configured reports directory to the reporters`() {
+        val reportsDirectories = mutableListOf<String>()
+
+        executeTests(
+            listener = RequirementsCoverageListener(
+                requirementsCoverageReporter = { _, reportsDirectory -> reportsDirectories.add(reportsDirectory) },
+                failBuild = {},
+                systemProperty = { null },
+            ),
+            testClasses = arrayOf(PassingRequirementCase::class.java),
+            configurationParameters = mapOf(
+                "reqCover.requirementsUris" to "requirements-a.yaml",
+                "reqCover.reportsDir" to "target/reqcover",
+            ),
+        )
+
+        assertEquals(listOf("target/reqcover"), reportsDirectories)
+    }
+
+    @Test
     fun `marks only successful annotated tests as verified`() {
         val tracker = RequirementsCoverageTracker()
 
         executeTests(
             listener = RequirementsCoverageListener(
                 tracker = tracker,
-                requirementsCoverageReporter = {},
+                requirementsCoverageReporter = { _, _ -> },
                 failBuild = {},
             ),
             testClasses = arrayOf(PassingRequirementCase::class.java, FailingRequirementCase::class.java),
@@ -119,7 +139,7 @@ class RequirementsCoverageListenerTest {
 
         executeTests(
             listener = RequirementsCoverageListener(
-                requirementsCoverageReporter = {},
+                requirementsCoverageReporter = { _, _ -> },
                 failBuild = { failBuildCalled.set(true) },
             ),
             testClasses = arrayOf(UnannotatedPassingCase::class.java),
@@ -137,7 +157,7 @@ class RequirementsCoverageListenerTest {
 
         executeTests(
             listener = RequirementsCoverageListener(
-                requirementsCoverageReporter = {},
+                requirementsCoverageReporter = { _, _ -> },
                 failBuild = { failBuildCalled.set(true) },
             ),
             testClasses = arrayOf(UnannotatedPassingCase::class.java),
@@ -156,7 +176,7 @@ class RequirementsCoverageListenerTest {
 
         executeTests(
             listener = RequirementsCoverageListener(
-                requirementsCoverageReporter = { events.add("report") },
+                requirementsCoverageReporter = { _, _ -> events.add("report") },
                 failBuild = { events.add("failBuild") },
             ),
             testClasses = arrayOf(UnannotatedPassingCase::class.java),
@@ -197,7 +217,7 @@ class RequirementsCoverageListenerTest {
 
         executeTests(
             listener = RequirementsCoverageListener(
-                requirementsCoverageReporter = {},
+                requirementsCoverageReporter = { _, _ -> },
                 failBuild = { failBuildCalled.set(true) },
             ),
             testClasses = arrayOf(UnannotatedPassingCase::class.java),
@@ -215,7 +235,7 @@ class RequirementsCoverageListenerTest {
 
         executeTests(
             listener = RequirementsCoverageListener(
-                requirementsCoverageReporter = {},
+                requirementsCoverageReporter = { _, _ -> },
                 failBuild = { failBuildCalled.set(true) },
             ),
             testClasses = arrayOf(UnannotatedPassingCase::class.java),
@@ -233,7 +253,7 @@ class RequirementsCoverageListenerTest {
         listOf("", " , ").forEach { emptyValue ->
             val warnings = capturedWarnings {
                 executeTests(
-                    listener = RequirementsCoverageListener(requirementsCoverageReporter = {}, failBuild = {}),
+                    listener = RequirementsCoverageListener(requirementsCoverageReporter = { _, _ -> }, failBuild = {}),
                     testClasses = arrayOf(PassingRequirementCase::class.java),
                     configurationParameters = mapOf("reqCover.requirementsUris" to emptyValue),
                 )
@@ -253,7 +273,7 @@ class RequirementsCoverageListenerTest {
         val warnings = capturedWarnings {
             executeTests(
                 listener = RequirementsCoverageListener(
-                    requirementsCoverageReporter = {},
+                    requirementsCoverageReporter = { _, _ -> },
                     failBuild = { failBuildCalled.set(true) },
                 ),
                 testClasses = arrayOf(PassingRequirementCase::class.java),
@@ -274,7 +294,7 @@ class RequirementsCoverageListenerTest {
 
         executeTests(
             listener = RequirementsCoverageListener(
-                requirementsCoverageReporter = {},
+                requirementsCoverageReporter = { _, _ -> },
                 failBuild = { failBuildCalled.set(true) },
             ),
             testClasses = arrayOf(UnannotatedPassingCase::class.java),
@@ -289,7 +309,7 @@ class RequirementsCoverageListenerTest {
     private fun verifiedBy(vararg testClasses: Class<*>): RequirementsCoverageTracker {
         val tracker = RequirementsCoverageTracker()
         executeTests(
-            listener = RequirementsCoverageListener(tracker = tracker, requirementsCoverageReporter = {}, failBuild = {}),
+            listener = RequirementsCoverageListener(tracker = tracker, requirementsCoverageReporter = { _, _ -> }, failBuild = {}),
             testClasses = arrayOf(*testClasses),
             configurationParameters = mapOf("reqCover.requirementsUris" to "requirements-a.yaml"),
         )

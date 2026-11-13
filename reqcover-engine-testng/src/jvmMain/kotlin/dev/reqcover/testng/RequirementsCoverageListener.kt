@@ -2,6 +2,7 @@ package dev.reqcover.testng
 
 import dev.reqcover.api.ForRequirement
 import dev.reqcover.engine.CoveragePolicy
+import dev.reqcover.engine.DEFAULT_REPORTS_DIRECTORY
 import dev.reqcover.engine.ReqCoverConfiguration
 import dev.reqcover.engine.RequirementsCoverageTracker
 import dev.reqcover.engine.CoverageRunLog
@@ -21,20 +22,20 @@ import kotlin.system.exitProcess
 
 class RequirementsCoverageListener @JvmOverloads constructor(
     private val tracker: RequirementsCoverageTracker = RequirementsCoverageTracker(),
-    private val requirementsCoverageReporter: (RequirementsCoverageTracker) -> Unit = ::report,
+    private val requirementsCoverageReporter: (RequirementsCoverageTracker, String) -> Unit = ::report,
     private val failBuild: () -> Unit = { exitProcess(1) },
     private val systemProperty: (String) -> String? = System::getProperty,
 ) : IExecutionListener, ISuiteListener, ITestListener {
     private val logger = Logger.getLogger(RequirementsCoverageListener::class.java.name)
     private val loadedRequirementsUris = ConcurrentHashMap.newKeySet<String>()
-    private val suitePolicies = ConcurrentLinkedQueue<CoveragePolicy>()
+    private val suiteConfigurations = ConcurrentLinkedQueue<ReqCoverConfiguration>()
 
     private fun configuration(suite: ISuite): ReqCoverConfiguration =
         ReqCoverConfiguration(listOf(systemProperty, suite::getParameter))
 
     override fun onStart(suite: ISuite) {
         val configuration = configuration(suite)
-        suitePolicies.add(configuration.coveragePolicy())
+        suiteConfigurations.add(configuration)
         val newRequirementsUris = configuration.requirementsUris().filter(loadedRequirementsUris::add)
         val loaded = loadAllRequirements(newRequirementsUris)
         tracker.expectAll(loaded.requirements)
@@ -68,8 +69,8 @@ This will enable ReqCover to check the requirements coverage against your requir
         }
         finishCoverageRun(
             tracker = tracker,
-            policy = CoveragePolicy.strictest(suitePolicies.toList()),
-            report = requirementsCoverageReporter,
+            policy = CoveragePolicy.strictest(suiteConfigurations.map { it.coveragePolicy() }),
+            report = { requirementsCoverageReporter(it, reportsDirectory()) },
             failBuild = failBuild,
             log = object : CoverageRunLog {
                 override fun info(message: String) = logger.info(message)
@@ -78,6 +79,9 @@ This will enable ReqCover to check the requirements coverage against your requir
             },
         )
     }
+
+    private fun reportsDirectory(): String =
+        suiteConfigurations.firstNotNullOfOrNull { it.value(ReqCoverConfiguration.REPORTS_DIR) } ?: DEFAULT_REPORTS_DIRECTORY
 
     private companion object {
         const val CHECK_REQUIREMENTS_URIS =
