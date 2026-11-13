@@ -25,4 +25,13 @@ kotlin {
 
 tasks.named<Test>("jvmTest") {
     useJUnitPlatform()
+    systemProperty("reqcover.version", project.version.toString())
+}
+
+tasks.named("jvmTest") {
+    dependsOn(
+        ":reqcover-core:jvmJar",
+        ":reqcover-engine:jvmJar",
+        "jvmJar",
+    )
 }

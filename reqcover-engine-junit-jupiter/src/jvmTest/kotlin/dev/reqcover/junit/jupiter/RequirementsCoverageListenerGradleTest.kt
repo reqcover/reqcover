@@ -131,6 +131,7 @@ class RequirementsCoverageListenerGradleTest {
     }
 
     private fun reqcoverModuleJarEntries(): List<String> {
+        val reqcoverVersion = System.getProperty("reqcover.version")
         val repositoryRoot = repositoryRoot()
         val jarDirectories = listOf(
             repositoryRoot.resolve("reqcover-core/build/libs"),
@@ -140,9 +141,9 @@ class RequirementsCoverageListenerGradleTest {
         return jarDirectories.map { jarDirectory ->
             Files.list(jarDirectory).use { paths ->
                 paths
-                    .filter { path -> path.fileName.toString().contains("-jvm-") && path.fileName.toString().endsWith(".jar") }
+                    .filter { path -> path.fileName.toString().endsWith("-jvm-$reqcoverVersion.jar") }
                     .findFirst()
-                    .orElseThrow()
+                    .orElseThrow { IllegalStateException("No jar for version $reqcoverVersion in $jarDirectory") }
                     .toAbsolutePath()
                     .normalize()
                     .toString()
