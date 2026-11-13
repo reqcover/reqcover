@@ -4,7 +4,7 @@ https://reqcover.dev/
 https://github.com/reqcover/reqcover
 
 ReqCover is a collection of tools and libraries to track requirements coverage from test cases.
-Currently, it supports JVM languages (Java, Kotlin, Scala, Groovy) and tests running in JUnit 5 Jupiter or TestNG.
+Currently, it supports JVM languages (Java, Kotlin, Scala, Groovy) and tests running in JUnit 5 Jupiter, TestNG or Cucumber.
 
 ## Architecture
 ReqCover consists of the following components:
@@ -13,13 +13,14 @@ ReqCover consists of the following components:
   * SPI for loading requirements from external sources
 * JUnit 5 Jupiter listener for tracking and reporting requirements coverage
 * TestNG listener for tracking and reporting requirements coverage
+* Cucumber plugin for tracking and reporting requirements coverage
 
 ## Installation
 ReqCover is published to GitHub Packages at `https://maven.pkg.github.com/reqcover/reqcover`.
 GitHub Packages requires authentication even for public packages: use your GitHub username and a personal access token with the `read:packages` scope.
 
 Add to your test classpath:
-* the engine for your test framework: `reqcover-engine-junit-jupiter` or `reqcover-engine-testng`
+* the engine for your test framework: `reqcover-engine-junit-jupiter`, `reqcover-engine-testng` or `reqcover-engine-cucumber`
 * a requirements source: `reqcover-source-openapi`
 * one or more reporters: `reqcover-reporter-html`, `reqcover-reporter-xml`
 
@@ -167,22 +168,52 @@ This rule is provisional and may change based on user feedback.
 
 Annotate TestNG tests with `@ForRequirement` exactly as with JUnit; only passing tests count as verifying their requirements.
 
+## Cucumber
+Add `reqcover-engine-cucumber` and a requirements source to the test classpath.
+ReqCover works with Cucumber 7 and 8 and uses your project's Cucumber version.
+
+Register the plugin and configure ReqCover in `junit-platform.properties` (when running Cucumber on the JUnit Platform) or `cucumber.properties`:
+```properties
+cucumber.plugin=dev.reqcover.cucumber.RequirementsCoverageListener
+reqCover.requirementsUris=requirements.yaml
+reqCover.minimumRequiredCoveragePercent=100
+```
+
+Link a scenario to a requirement with a tag. A passing scenario covers every requirement it is tagged with; tags on the feature or rule apply to all its scenarios.
+```gherkin
+Feature: Users
+
+  @req:#getUsers/200
+  Scenario: list users
+    ...
+```
+
+| Setting | Description | Default |
+|---|---|---|
+| `reqCover.cucumber.tagPrefix` | Prefix of the tags that name a requirement; the rest of the tag is the requirement ID | `@req:` |
+| `reqCover.requirementsUris` | Comma-separated classpath locations of the requirements specifications | none (a warning is logged) |
+| `reqCover.minimumRequiredCoveragePercent` | Minimum required requirements coverage in percent | `0.0` |
+| `reqCover.failIfBelowMinimum` | Whether to fail the build if the coverage is below the minimum | `true` |
+| `reqCover.reportsDir` | Directory for the HTML and XML reports, relative to the working directory | `build/reports/tests/reqcover` |
+
 ## When a requirement counts as covered
 A requirement is covered when at least one test annotated with `@ForRequirement` for it passes.
+For Cucumber, a passing scenario covers the requirements of its tags.
 For parameterized, repeated (`@RepeatedTest`) and data-provider tests, and for the dynamic tests of a `@TestFactory`, one passing run is enough; failing, skipped and aborted runs do not count.
 This rule is provisional and may change based on user feedback.
 
 ## Configuration precedence
-Every ReqCover setting (`reqCover.requirementsUris`, `reqCover.minimumRequiredCoveragePercent`, `reqCover.failIfBelowMinimum`, `reqCover.reportsDir`) is looked up in this order; the first place that sets it wins:
+Every ReqCover setting (`reqCover.requirementsUris`, `reqCover.minimumRequiredCoveragePercent`, `reqCover.failIfBelowMinimum`, `reqCover.reportsDir`, and for Cucumber `reqCover.cucumber.tagPrefix`) is looked up in this order; the first place that sets it wins:
 
-| Order | JUnit 5 Jupiter | TestNG |
-|---|---|---|
-| 1 | JVM system property (`-DreqCover.…`) | JVM system property (`-DreqCover.…`) |
-| 2 | JUnit configuration parameter (`junit-platform.properties`, launcher or build tool configuration) | `testng.xml` suite `<parameter>` |
-| 3 | Built-in default | Built-in default |
+| Order | JUnit 5 Jupiter | TestNG | Cucumber |
+|---|---|---|---|
+| 1 | JVM system property (`-DreqCover.…`) | JVM system property (`-DreqCover.…`) | JVM system property (`-DreqCover.…`) |
+| 2 | JUnit configuration parameter (`junit-platform.properties`, launcher or build tool configuration) | `testng.xml` suite `<parameter>` | `cucumber.properties` |
+| 3 | Built-in default | Built-in default | `junit-platform.properties` |
+| 4 | | | Built-in default |
 
 ## Requirements file problems
-These rules apply to JUnit and TestNG alike:
+These rules apply to JUnit, TestNG and Cucumber alike:
 
 | Situation | Behaviour |
 |---|---|
