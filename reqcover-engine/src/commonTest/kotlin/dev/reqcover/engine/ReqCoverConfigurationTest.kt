@@ -83,4 +83,52 @@ class ReqCoverConfigurationTest {
     fun `the reports directory defaults to the Gradle reports directory`() {
         assertEquals("build/reports/tests/reqcover", configuration().reportsDirectory())
     }
+
+    @Test
+    fun `valid or missing settings have no problems`() {
+        val config = configuration(
+            mapOf(
+                "reqCover.minimumRequiredCoveragePercent" to "87.5",
+                "reqCover.failIfBelowMinimum" to "FALSE",
+            ),
+        )
+
+        assertEquals(emptyList(), config.problems())
+        assertEquals(emptyList(), configuration().problems())
+    }
+
+    @Test
+    fun `a minimum that is not a number is a problem`() {
+        assertEquals(
+            listOf("Invalid value '100%' for reqCover.minimumRequiredCoveragePercent: expected a number from 0 to 100."),
+            configuration(mapOf("reqCover.minimumRequiredCoveragePercent" to "100%")).problems(),
+        )
+    }
+
+    @Test
+    fun `a minimum outside 0 to 100 is a problem`() {
+        listOf("-1", "100.1").forEach { value ->
+            assertEquals(
+                listOf("Invalid value '$value' for reqCover.minimumRequiredCoveragePercent: expected a number from 0 to 100."),
+                configuration(mapOf("reqCover.minimumRequiredCoveragePercent" to value)).problems(),
+            )
+        }
+    }
+
+    @Test
+    fun `the minimum may be exactly 0 or 100`() {
+        listOf("0", "100").forEach { value ->
+            assertEquals(emptyList(), configuration(mapOf("reqCover.minimumRequiredCoveragePercent" to value)).problems())
+        }
+    }
+
+    @Test
+    fun `failIfBelowMinimum other than true or false is a problem`() {
+        listOf("yes", "1", "").forEach { value ->
+            assertEquals(
+                listOf("Invalid value '$value' for reqCover.failIfBelowMinimum: expected true or false."),
+                configuration(mapOf("reqCover.failIfBelowMinimum" to value)).problems(),
+            )
+        }
+    }
 }

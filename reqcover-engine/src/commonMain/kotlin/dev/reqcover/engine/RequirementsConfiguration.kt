@@ -16,6 +16,16 @@ class ReqCoverConfiguration(private val sources: List<(String) -> String?>) {
             failIfBelowMinimum = value(FAIL_IF_BELOW_MINIMUM),
         )
 
+    fun problems(): List<String> =
+        listOfNotNull(
+            value(MINIMUM_REQUIRED_COVERAGE_PERCENT)
+                ?.takeUnless { it.toDoubleOrNull()?.let { minimum -> minimum in 0.0..100.0 } == true }
+                ?.let { "Invalid value '$it' for $MINIMUM_REQUIRED_COVERAGE_PERCENT: expected a number from 0 to 100." },
+            value(FAIL_IF_BELOW_MINIMUM)
+                ?.takeUnless { it.lowercase() in setOf("true", "false") }
+                ?.let { "Invalid value '$it' for $FAIL_IF_BELOW_MINIMUM: expected true or false." },
+        )
+
     fun reportsDirectory(): String = value(REPORTS_DIR) ?: DEFAULT_REPORTS_DIRECTORY
 
     companion object {
