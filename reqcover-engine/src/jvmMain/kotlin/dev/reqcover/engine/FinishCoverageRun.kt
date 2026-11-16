@@ -12,6 +12,7 @@ fun finishCoverageRun(
     report: (RequirementsCoverageTracker) -> Unit,
     failBuild: () -> Unit,
     log: CoverageRunLog,
+    configurationProblems: List<String> = emptyList(),
 ) {
     val unverified = tracker.unverifiedRequirements()
     if (unverified.isNotEmpty()) {
@@ -31,6 +32,12 @@ fun finishCoverageRun(
     log.info("Requirements coverage: ${outcome.coveredRequirements} out of ${outcome.expectedRequirements} = $coverage%")
     report(tracker)
 
+    if (configurationProblems.isNotEmpty()) {
+        configurationProblems.forEach(log::error)
+        log.error("Exiting with error code 1 due to invalid ReqCover configuration.")
+        failBuild()
+        return
+    }
     if (!outcome.isBelowMinimum) {
         log.info("Requirements coverage meets the minimum required coverage of $minimum%. Actual coverage: $coverage%")
         return

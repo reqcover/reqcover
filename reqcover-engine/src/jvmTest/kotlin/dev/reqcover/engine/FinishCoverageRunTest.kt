@@ -24,6 +24,7 @@ class FinishCoverageRunTest {
     private fun finish(
         tracker: RequirementsCoverageTracker,
         policy: CoveragePolicy = CoveragePolicy(),
+        configurationProblems: List<String> = emptyList(),
     ): Run {
         val log = RecordingLog()
         val events = mutableListOf<String>()
@@ -33,6 +34,7 @@ class FinishCoverageRunTest {
             report = { events.add("report") },
             failBuild = { events.add("failBuild") },
             log = log,
+            configurationProblems = configurationProblems,
         )
         return Run(log, events)
     }
@@ -113,5 +115,33 @@ class FinishCoverageRunTest {
             "${run.log.messages}",
         )
         assertEquals(emptyList(), run.log.at("error"))
+    }
+
+    @Test
+    fun `reports and then fails the build when the configuration has problems`() {
+        val run = finish(
+            tracker(expected = setOf("#a"), verified = setOf("#a")),
+            configurationProblems = listOf("Invalid value '100%' for reqCover.minimumRequiredCoveragePercent: expected a number from 0 to 100."),
+        )
+
+        assertEquals(listOf("report", "failBuild"), run.events)
+        assertEquals(
+            listOf(
+                "Invalid value '100%' for reqCover.minimumRequiredCoveragePercent: expected a number from 0 to 100.",
+                "Exiting with error code 1 due to invalid ReqCover configuration.",
+            ),
+            run.log.at("error"),
+        )
+    }
+
+    @Test
+    fun `fails the build only once when the configuration has problems and coverage is low`() {
+        val run = finish(
+            tracker(expected = setOf("#a", "#b"), verified = setOf("#a")),
+            CoveragePolicy(minimumRequiredCoveragePercent = 100.0),
+            configurationProblems = listOf("Invalid value 'yes' for reqCover.failIfBelowMinimum: expected true or false."),
+        )
+
+        assertEquals(listOf("report", "failBuild"), run.events)
     }
 }
