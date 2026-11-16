@@ -37,10 +37,10 @@ repositories {
 }
 
 dependencies {
-    testImplementation("dev.reqcover:reqcover-engine-junit-jupiter:0.0.10") // or reqcover-engine-testng
-    testImplementation("dev.reqcover:reqcover-source-openapi:0.0.10")
-    testImplementation("dev.reqcover:reqcover-reporter-html:0.0.10")
-    testImplementation("dev.reqcover:reqcover-reporter-xml:0.0.10")
+    testImplementation("dev.reqcover:reqcover-engine-junit-jupiter:0.0.11") // or reqcover-engine-testng, reqcover-engine-cucumber
+    testImplementation("dev.reqcover:reqcover-source-openapi:0.0.11")
+    testImplementation("dev.reqcover:reqcover-reporter-html:0.0.11")
+    testImplementation("dev.reqcover:reqcover-reporter-xml:0.0.11")
 }
 ```
 
@@ -57,20 +57,26 @@ Configure the repository credentials in `~/.m2/settings.xml` under the server id
 <dependencies>
     <dependency>
         <groupId>dev.reqcover</groupId>
-        <artifactId>reqcover-engine-junit-jupiter-jvm</artifactId> <!-- or reqcover-engine-testng-jvm -->
-        <version>0.0.10</version>
+        <artifactId>reqcover-engine-junit-jupiter-jvm</artifactId> <!-- or reqcover-engine-testng-jvm, reqcover-engine-cucumber-jvm -->
+        <version>0.0.11</version>
         <scope>test</scope>
     </dependency>
     <dependency>
         <groupId>dev.reqcover</groupId>
         <artifactId>reqcover-source-openapi-jvm</artifactId>
-        <version>0.0.10</version>
+        <version>0.0.11</version>
         <scope>test</scope>
     </dependency>
     <dependency>
         <groupId>dev.reqcover</groupId>
         <artifactId>reqcover-reporter-html-jvm</artifactId>
-        <version>0.0.10</version>
+        <version>0.0.11</version>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>dev.reqcover</groupId>
+        <artifactId>reqcover-reporter-xml-jvm</artifactId>
+        <version>0.0.11</version>
         <scope>test</scope>
     </dependency>
 </dependencies>

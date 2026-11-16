@@ -29,19 +29,19 @@ version:
 ## release-patch:	Creates a patch release.
 release-patch:
 	$(GRADLE) \
-		release -Drelease.versionIncrememnter=incrementPatch \
+		release -Prelease.versionIncrementer=incrementPatch \
 
 .PHONY: release-minor
 ## release-minor:	Creates a minor release.
 release-minor:
 	$(GRADLE) \
-		release -Drelease.versionIncrememnter=incrementMinor \
+		release -Prelease.versionIncrementer=incrementMinor \
 
 .PHONY: release-major
 ## release-major:	Creates a major release.
 release-major:
 	$(GRADLE) \
-		release -Drelease.versionIncrememnter=incrementMajor \
+		release -Prelease.versionIncrementer=incrementMajor \
 
 .PHONY: publish
 ## publish:	Publishes a release.
