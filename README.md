@@ -85,6 +85,7 @@ With Maven, set `reqCover.reportsDir` so the reports go to `target/` instead of 
 
 Annotate tests with `@ForRequirement`; only passing tests count as verifying their requirements.
 A test can carry several `@ForRequirement` annotations.
+`@ForRequirement` can also be put on a test class; the requirement is then covered when at least one test in the class passes.
 
 Java:
 ```java
@@ -199,6 +200,7 @@ Feature: Users
 ## When a requirement counts as covered
 A requirement is covered when at least one test annotated with `@ForRequirement` for it passes.
 For Cucumber, a passing scenario covers the requirements of its tags.
+A requirement on a test class (JUnit, TestNG) is covered when at least one test in the class passes.
 For parameterized, repeated (`@RepeatedTest`) and data-provider tests, and for the dynamic tests of a `@TestFactory`, one passing run is enough; failing, skipped and aborted runs do not count.
 This rule is provisional and may change based on user feedback.
 
