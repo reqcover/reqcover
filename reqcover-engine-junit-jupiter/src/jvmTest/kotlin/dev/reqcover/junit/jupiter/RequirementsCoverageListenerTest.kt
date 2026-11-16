@@ -197,6 +197,20 @@ class RequirementsCoverageListenerTest {
     }
 
     @Test
+    fun `a requirement on a test class is covered when at least one of its tests passes`() {
+        val tracker = verifiedBy(ClassLevelRequirementCase::class.java)
+
+        assertEquals(setOf("#classReq", "#reqOne"), tracker.verifiedRequirements())
+    }
+
+    @Test
+    fun `a requirement on a test class is not covered when none of its tests pass`() {
+        val tracker = verifiedBy(FailingClassLevelRequirementCase::class.java)
+
+        assertEquals(emptySet<String>(), tracker.verifiedRequirements())
+    }
+
+    @Test
     fun `one passing run of a parameterized test covers its requirement`() {
         assertEquals(setOf("#paramReq"), verifiedBy(PartlyPassingParameterizedCase::class.java).verifiedRequirements())
     }
@@ -434,5 +448,28 @@ class RequirementsCoverageListenerTest {
         @ForRequirement("#factoryReq")
         fun passesOnlyForTwo(): List<DynamicTest> =
             listOf(1, 2).map { i -> dynamicTest("run $i") { if (i != 2) throw AssertionError("boom $i") } }
+    }
+
+    @Disabled("Executed via the embedded JUnit launcher in RequirementsCoverageListenerTest")
+    @ForRequirement("#classReq")
+    class ClassLevelRequirementCase {
+        @Test
+        @ForRequirement("#reqOne")
+        fun passes() {
+        }
+
+        @Test
+        fun fails() {
+            throw AssertionError("boom")
+        }
+    }
+
+    @Disabled("Executed via the embedded JUnit launcher in RequirementsCoverageListenerTest")
+    @ForRequirement("#classReq")
+    class FailingClassLevelRequirementCase {
+        @Test
+        fun fails() {
+            throw AssertionError("boom")
+        }
     }
 }

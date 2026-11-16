@@ -46,6 +46,24 @@ class RequirementsCoverageListenerTest {
     }
 
     @Test
+    fun `a requirement on a test class is covered when at least one of its tests passes`() {
+        val tracker = RequirementsCoverageTracker()
+
+        executeTests(listener = listener(tracker = tracker), testClasses = arrayOf(ClassLevelRequirementCase::class.java))
+
+        assertEquals(setOf("#classReq", "#reqOne"), tracker.verifiedRequirements())
+    }
+
+    @Test
+    fun `a requirement on a test class is not covered when none of its tests pass`() {
+        val tracker = RequirementsCoverageTracker()
+
+        executeTests(listener = listener(tracker = tracker), testClasses = arrayOf(FailingClassLevelRequirementCase::class.java))
+
+        assertEquals(emptySet<String>(), tracker.verifiedRequirements())
+    }
+
+    @Test
     fun `marks every requirement of a test with multiple requirements as verified`() {
         val tracker = RequirementsCoverageTracker()
 
@@ -516,6 +534,27 @@ class RequirementsCoverageListenerTest {
     class UnannotatedPassingCase {
         @org.testng.annotations.Test
         fun passes() {
+        }
+    }
+
+    @ForRequirement("#classReq")
+    class ClassLevelRequirementCase {
+        @org.testng.annotations.Test
+        @ForRequirement("#reqOne")
+        fun passes() {
+        }
+
+        @org.testng.annotations.Test
+        fun fails() {
+            throw AssertionError("boom")
+        }
+    }
+
+    @ForRequirement("#classReq")
+    class FailingClassLevelRequirementCase {
+        @org.testng.annotations.Test
+        fun fails() {
+            throw AssertionError("boom")
         }
     }
 }

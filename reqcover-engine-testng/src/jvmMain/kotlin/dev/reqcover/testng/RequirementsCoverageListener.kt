@@ -49,9 +49,12 @@ class RequirementsCoverageListener @JvmOverloads constructor(
     }
 
     override fun onTestSuccess(result: ITestResult) {
-        result.method.constructorOrMethod.method
+        val methodRequirements = result.method.constructorOrMethod.method
             ?.getAnnotationsByType(ForRequirement::class.java)
-            ?.forEach { tracker.verified(it.id) }
+            ?.toList()
+            .orEmpty()
+        val classRequirements = result.testClass.realClass.getAnnotationsByType(ForRequirement::class.java).toList()
+        (methodRequirements + classRequirements).forEach { tracker.verified(it.id) }
     }
 
     override fun onExecutionFinish() {
