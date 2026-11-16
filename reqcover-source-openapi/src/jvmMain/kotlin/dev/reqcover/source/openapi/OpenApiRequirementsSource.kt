@@ -30,7 +30,7 @@ class OpenApiRequirementsSource : JvmRequirementsSource {
         val pathsNode = requireNotNull(root.get("paths")) { "Not an OpenAPI document: no 'paths' found." }
         for ((rawPath, pathItem) in pathsNode.properties()) {
             for ((method, opNode) in pathItem.properties()) {
-                val operationId = opNode.get("operationId")?.asText()
+                val operationId = opNode.get("operationId")?.asString()
                 if (operationId == null) {
                     println("Warning: Operation ID not found for path '$rawPath' and method '$method'.")
                     continue
