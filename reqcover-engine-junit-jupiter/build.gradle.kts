@@ -13,9 +13,10 @@ kotlin {
             api(project(":reqcover-engine"))
         }
         jvmMain.dependencies {
-            implementation(libs.junit.platform.launcher)
+            compileOnly(libs.junit.platform.launcher)
         }
         jvmTest.dependencies {
+            implementation(libs.junit.platform.launcher)
             implementation(project(":reqcover-source-openapi"))
             implementation(libs.junit.jupiter.engine)
             implementation(libs.bundles.junit)
