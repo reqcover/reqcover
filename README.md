@@ -214,7 +214,7 @@ Every ReqCover setting (`reqCover.requirementsUris`, `reqCover.minimumRequiredCo
 | 3 | Built-in default | Built-in default | `junit-platform.properties` |
 | 4 | | | Built-in default |
 
-## Requirements file problems
+## Requirements file and setting problems
 These rules apply to JUnit, TestNG and Cucumber alike:
 
 | Situation | Behaviour |
@@ -223,6 +223,7 @@ These rules apply to JUnit, TestNG and Cucumber alike:
 | A requirements file is malformed or not a supported format | Error, the build fails |
 | `reqCover.requirementsUris` is not set or is empty | Warning, coverage is not checked |
 | A requirements file contains no requirements (e.g. OpenAPI `paths: {}`) | Warning, the file counts as fully covered |
+| `reqCover.minimumRequiredCoveragePercent` is not a number from 0 to 100, or `reqCover.failIfBelowMinimum` is not `true`/`false` | Error after the report is written, the build fails |
 
 The two warning cases are provisional and may change based on user feedback.
 If you have an opinion, please comment on https://github.com/reqcover/reqcover/issues.
