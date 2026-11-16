@@ -245,3 +245,10 @@ If you have an opinion, please comment on https://github.com/reqcover/reqcover/i
 This project is sponsored by:
 * eSol GmbH - https://www.esol.de
 * Nelkinda Software Craft Pvt Ltd - https://nelkinda.com
+
+## Contributing
+Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
+To report a security problem, see [SECURITY.md](SECURITY.md).
+
+## License
+ReqCover is licensed under the BSD 3-Clause License; see [LICENSE](LICENSE).
