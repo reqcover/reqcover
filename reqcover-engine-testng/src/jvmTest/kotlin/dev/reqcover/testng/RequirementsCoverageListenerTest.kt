@@ -244,6 +244,51 @@ class RequirementsCoverageListenerTest {
     }
 
     @Test
+    fun `fails when a coverage setting is invalid`() {
+        val failBuildCalled = AtomicBoolean(false)
+
+        executeTests(
+            listener = listener(
+                failBuild = { failBuildCalled.set(true) },
+                properties = mapOf(
+                    "reqCover.requirementsUris" to "requirements-a.yaml",
+                    "reqCover.minimumRequiredCoveragePercent" to "100%",
+                ),
+            ),
+            testClasses = arrayOf(PassingRequirementCase::class.java),
+        )
+
+        assertTrue(failBuildCalled.get())
+    }
+
+    @Test
+    fun `fails when a coverage setting in a testng xml suite parameter is invalid`() {
+        val failBuildCalled = AtomicBoolean(false)
+
+        executeSuites(
+            listener = listener(failBuild = { failBuildCalled.set(true) }),
+            suites = listOf(
+                suite("a", mapOf("reqCover.requirementsUris" to "requirements-a.yaml")),
+                suite("b", mapOf("reqCover.failIfBelowMinimum" to "yes")),
+            ),
+        )
+
+        assertTrue(failBuildCalled.get())
+    }
+
+    @Test
+    fun `reports an invalid system property only once for several suites`() {
+        val errors = capturedMessages(Level.SEVERE) {
+            executeSuites(
+                listener = listener(properties = mapOf("reqCover.minimumRequiredCoveragePercent" to "100%")),
+                suites = listOf(suite("a", emptyMap()), suite("b", emptyMap())),
+            )
+        }
+
+        assertEquals(1, errors.count { it.startsWith("Invalid value '100%'") }, "Expected one error, but got: $errors")
+    }
+
+    @Test
     fun `does not fail below the minimum when failIfBelowMinimum is false`() {
         val failBuildCalled = AtomicBoolean(false)
 

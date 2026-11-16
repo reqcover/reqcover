@@ -75,6 +75,7 @@ This will enable ReqCover to check the requirements coverage against your requir
         finishCoverageRun(
             tracker = tracker,
             policy = configuration.coveragePolicy(),
+            configurationProblems = configuration.problems(),
             report = { requirementsCoverageReporter(it, configuration.reportsDirectory()) },
             failBuild = failBuild,
             log = object : CoverageRunLog {

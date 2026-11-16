@@ -303,6 +303,26 @@ class RequirementsCoverageListenerTest {
     }
 
     @Test
+    fun `fails when a coverage setting is invalid`() {
+        val failBuildCalled = AtomicBoolean(false)
+
+        executeTests(
+            listener = RequirementsCoverageListener(
+                requirementsCoverageReporter = { _, _ -> },
+                failBuild = { failBuildCalled.set(true) },
+                systemProperty = { null },
+            ),
+            testClasses = arrayOf(PassingRequirementCase::class.java),
+            configurationParameters = mapOf(
+                "reqCover.requirementsUris" to "requirements-a.yaml",
+                "reqCover.minimumRequiredCoveragePercent" to "100%",
+            ),
+        )
+
+        assertTrue(failBuildCalled.get())
+    }
+
+    @Test
     fun `fails when removed reqCover requirementsUri property is configured`() {
         val failBuildCalled = AtomicBoolean(false)
 
