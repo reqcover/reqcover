@@ -27,7 +27,7 @@ fun finishCoverageRun(
     }
 
     val outcome = evaluateCoverage(tracker, policy)
-    val coverage = "%.1f".format(outcome.coveragePercent)
+    val coverage = "%.1f".format(java.util.Locale.ROOT, outcome.coveragePercent)
     val minimum = policy.minimumRequiredCoveragePercent
     log.info("Requirements coverage: ${outcome.coveredRequirements} out of ${outcome.expectedRequirements} = $coverage%")
     report(tracker)

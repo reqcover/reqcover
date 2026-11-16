@@ -103,4 +103,23 @@ class XmlRequirementsCoverageReporterTest {
         val written = reportsDirectory.resolve("requirements-coverage.xml")
         org.junit.jupiter.api.Assertions.assertTrue(java.nio.file.Files.readString(written).contains("REQ-1"))
     }
+
+    @Test
+    fun `writes the coverage with a dot as decimal separator whatever the default locale`() {
+        val defaultLocale = java.util.Locale.getDefault()
+        java.util.Locale.setDefault(java.util.Locale.GERMANY)
+        try {
+            val tracker = RequirementsCoverageTracker().apply {
+                expectAll(listOf("REQ-1", "REQ-2"))
+                verified("REQ-1")
+            }
+            val out = ByteArrayOutputStream()
+
+            reporter.report(tracker, out)
+
+            org.junit.jupiter.api.Assertions.assertTrue(out.toString().contains("coverage=\"50.0\""), out.toString())
+        } finally {
+            java.util.Locale.setDefault(defaultLocale)
+        }
+    }
 }

@@ -144,4 +144,24 @@ class FinishCoverageRunTest {
 
         assertEquals(listOf("report", "failBuild"), run.events)
     }
+
+    @Test
+    fun `logs the coverage with a dot as decimal separator whatever the default locale`() {
+        val defaultLocale = java.util.Locale.getDefault()
+        java.util.Locale.setDefault(java.util.Locale.GERMANY)
+        try {
+            val run = finish(
+                tracker(expected = setOf("#a", "#b"), verified = setOf("#a")),
+                CoveragePolicy(minimumRequiredCoveragePercent = 100.0),
+            )
+
+            assertTrue(run.log.at("info").contains("Requirements coverage: 1 out of 2 = 50.0%"), "${run.log.messages}")
+            assertTrue(
+                run.log.at("error").contains("Requirements coverage is below the minimum required coverage of 100.0%. Actual coverage: 50.0%"),
+                "${run.log.messages}",
+            )
+        } finally {
+            java.util.Locale.setDefault(defaultLocale)
+        }
+    }
 }

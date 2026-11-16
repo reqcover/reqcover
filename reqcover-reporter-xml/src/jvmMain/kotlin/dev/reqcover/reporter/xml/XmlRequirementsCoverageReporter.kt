@@ -34,7 +34,7 @@ class XmlRequirementsCoverageReporter : RequirementsCoverageReporter {
             if (tracker.expectedRequirements().isEmpty()) {
                 "100.0"
             } else {
-                "%.1f".format((tracker.coveredRequirements().size.toDouble() / tracker.expectedRequirements().size) * 100)
+                "%.1f".format(java.util.Locale.ROOT, (tracker.coveredRequirements().size.toDouble() / tracker.expectedRequirements().size) * 100)
             }
         )
 
