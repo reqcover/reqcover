@@ -1,30 +1,74 @@
-# ReqCover
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://reqcover.dev/brand/reqcover-lockup-dark.svg">
+    <img src="https://reqcover.dev/brand/reqcover-lockup-light.svg" alt="ReqCover" height="56">
+  </picture>
+</p>
 
-https://reqcover.dev/
-https://github.com/reqcover/reqcover
+<p align="center"><b>Every requirement, proven by a passing test.</b></p>
 
-ReqCover is a collection of tools and libraries to track requirements coverage from test cases.
-Currently, it supports JVM languages (Java, Kotlin, Scala, Groovy) and tests running in JUnit 5 Jupiter, TestNG or Cucumber.
+<p align="center">
+  <a href="https://github.com/reqcover/reqcover/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/reqcover/reqcover"></a>
+  <a href="https://github.com/reqcover/reqcover/actions/workflows/gradle.yml"><img alt="Build" src="https://github.com/reqcover/reqcover/actions/workflows/gradle.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="License: BSD-3-Clause" src="https://img.shields.io/badge/license-BSD--3--Clause-blue"></a>
+</p>
 
-## Architecture
-ReqCover consists of the following components:
-* API for linking test cases with requirements
-* Framework for managing requirements coverage with
-  * SPI for loading requirements from external sources
-* JUnit 5 Jupiter listener for tracking and reporting requirements coverage
-* TestNG listener for tracking and reporting requirements coverage
-* Cucumber plugin for tracking and reporting requirements coverage
+ReqCover links your tests to the requirements in your API specification, reports which requirements are covered by a passing test, and fails the build when coverage is below your minimum.
+It works with **JUnit Jupiter** (JUnit 5 and 6), **TestNG** and **Cucumber**, with Gradle or Maven, for Java, Kotlin and other JVM languages.
 
-## Installation
-ReqCover is published to GitHub Packages at `https://maven.pkg.github.com/reqcover/reqcover`.
-GitHub Packages requires authentication even for public packages: use your GitHub username and a personal access token with the `read:packages` scope.
+**Documentation: [reqcover.dev](https://reqcover.dev/)** · [Getting started](https://reqcover.dev/getting-started/) · [Release notes](https://reqcover.dev/releases/) · [Upgrading](https://reqcover.dev/migration/)
 
-Add to your test classpath:
-* the engine for your test framework: `reqcover-engine-junit-jupiter`, `reqcover-engine-testng` or `reqcover-engine-cucumber`
-* a requirements source: `reqcover-source-openapi`
-* one or more reporters: `reqcover-reporter-html`, `reqcover-reporter-xml`
+## How it works
 
-Gradle (Kotlin DSL):
+1. **Describe your requirements.** Point ReqCover at an OpenAPI document. Each operation and response becomes a requirement:
+
+   ```yaml
+   paths:
+     /users:
+       get:
+         operationId: getUsers
+         responses:
+           '200':
+             description: All users          # -> #getUsers/200
+     /users/{id}:
+       delete:
+         operationId: deleteUser
+         responses:
+           '204':
+             description: Deleted
+             x-requirements:
+               audit: The deletion is logged # -> #deleteUser/204/audit
+   ```
+
+   An operation without `responses` gives `#operationId`; a response gives `#operationId/status`; each key under `x-requirements` gives `#operationId/status/key`.
+
+2. **Link your tests.** Annotate a test (or a whole test class) with `@ForRequirement`, or tag a Cucumber scenario with `@req:`:
+
+   ```java
+   @Test
+   @ForRequirement(id = "#getUsers/200")   // Kotlin: @ForRequirement("#getUsers/200")
+   void listsUsers() { }
+   ```
+
+   ```gherkin
+   @req:#getUsers/200
+   Scenario: list users
+   ```
+
+3. **Run your build.** Only passing tests count. ReqCover writes an HTML and an XML report and checks the coverage gate:
+
+   ```text
+   WARNING: The following requirements were not covered by any test: [#deleteUser/204/audit]
+   INFO: Requirements coverage: 1 out of 2 = 50.0%
+   SEVERE: Requirements coverage is below the minimum required coverage of 100.0%. Actual coverage: 50.0%
+   SEVERE: Exiting with error code 1 due to insufficient requirements coverage.
+   ```
+
+## Quick start (Gradle + JUnit)
+
+ReqCover is published to GitHub Packages, which requires a GitHub token with the `read:packages` scope even for public packages.
+Put `gpr.user` and `gpr.key` in `~/.gradle/gradle.properties`, then in `build.gradle.kts`:
+
 ```kotlin
 repositories {
     mavenCentral()
@@ -37,218 +81,68 @@ repositories {
 }
 
 dependencies {
-    testImplementation("dev.reqcover:reqcover-engine-junit-jupiter:0.0.11") // or reqcover-engine-testng, reqcover-engine-cucumber
-    testImplementation("dev.reqcover:reqcover-source-openapi:0.0.11")
-    testImplementation("dev.reqcover:reqcover-reporter-html:0.0.11")
-    testImplementation("dev.reqcover:reqcover-reporter-xml:0.0.11")
+    testImplementation("dev.reqcover:reqcover-engine-junit-jupiter:0.0.12")
+    testImplementation("dev.reqcover:reqcover-source-openapi:0.0.12")
+    testImplementation("dev.reqcover:reqcover-reporter-html:0.0.12")
+    testImplementation("dev.reqcover:reqcover-reporter-xml:0.0.12")
 }
 ```
 
-Maven uses the JVM artifacts, which have a `-jvm` suffix.
-Configure the repository credentials in `~/.m2/settings.xml` under the server id `github`.
-```xml
-<repositories>
-    <repository>
-        <id>github</id>
-        <url>https://maven.pkg.github.com/reqcover/reqcover</url>
-    </repository>
-</repositories>
+Put your OpenAPI file on the test classpath, for example `src/test/resources/requirements.yaml`, and configure ReqCover in `src/test/resources/junit-platform.properties`:
 
-<dependencies>
-    <dependency>
-        <groupId>dev.reqcover</groupId>
-        <artifactId>reqcover-engine-junit-jupiter-jvm</artifactId> <!-- or reqcover-engine-testng-jvm, reqcover-engine-cucumber-jvm -->
-        <version>0.0.11</version>
-        <scope>test</scope>
-    </dependency>
-    <dependency>
-        <groupId>dev.reqcover</groupId>
-        <artifactId>reqcover-source-openapi-jvm</artifactId>
-        <version>0.0.11</version>
-        <scope>test</scope>
-    </dependency>
-    <dependency>
-        <groupId>dev.reqcover</groupId>
-        <artifactId>reqcover-reporter-html-jvm</artifactId>
-        <version>0.0.11</version>
-        <scope>test</scope>
-    </dependency>
-    <dependency>
-        <groupId>dev.reqcover</groupId>
-        <artifactId>reqcover-reporter-xml-jvm</artifactId>
-        <version>0.0.11</version>
-        <scope>test</scope>
-    </dependency>
-</dependencies>
-```
-
-With Maven, set `reqCover.reportsDir` so the reports go to `target/` instead of `build/`, for example in the Surefire configuration:
-```xml
-<systemPropertyVariables>
-    <reqCover.reportsDir>${project.build.directory}/reqcover</reqCover.reportsDir>
-</systemPropertyVariables>
-```
-
-Annotate tests with `@ForRequirement`; only passing tests count as verifying their requirements.
-A test can carry several `@ForRequirement` annotations.
-`@ForRequirement` can also be put on a test class; the requirement is then covered when at least one test in the class passes.
-
-Java:
-```java
-@Test
-@ForRequirement(id = "#getUsers/200")
-void listsUsers() { }
-```
-
-Kotlin:
-```kotlin
-@Test
-@ForRequirement("#getUsers/200")
-fun `lists users`() { }
-```
-
-## JUnit 5 Jupiter
-The listener registers itself automatically through the JUnit Platform.
-Configure ReqCover in `src/test/resources/junit-platform.properties` (or as JVM system properties, which take precedence):
 ```properties
 reqCover.requirementsUris=requirements.yaml
 reqCover.minimumRequiredCoveragePercent=100
 ```
 
-| Setting | Description | Default |
+Run `./gradlew test`. The JUnit listener registers itself; no extension or plugin is needed.
+The reports are written to `build/reports/tests/reqcover/`.
+The full walkthrough is in [Getting started](https://reqcover.dev/getting-started/).
+
+## Other setups
+
+| Setup | What changes | Guide |
 |---|---|---|
-| `reqCover.requirementsUris` | Comma-separated classpath locations of the requirements specifications | none (a warning is logged) |
-| `reqCover.minimumRequiredCoveragePercent` | Minimum required requirements coverage in percent | `0.0` |
-| `reqCover.failIfBelowMinimum` | Whether to fail the build if the coverage is below the minimum | `true` |
-| `reqCover.reportsDir` | Directory for the HTML and XML reports, relative to the working directory | `build/reports/tests/reqcover` |
+| TestNG | Use `reqcover-engine-testng`; configure with system properties or `testng.xml` suite parameters | [TestNG](https://reqcover.dev/guides/testng/) |
+| Cucumber | Use `reqcover-engine-cucumber`; register `cucumber.plugin=dev.reqcover.cucumber.RequirementsCoverageListener`; tag scenarios with `@req:<id>` | [Cucumber](https://reqcover.dev/guides/cucumber/) |
+| Maven | Use the `-jvm` artifacts (for example `reqcover-engine-junit-jupiter-jvm`) and set `reqCover.reportsDir` to `${project.build.directory}/reqcover` | [Maven](https://reqcover.dev/guides/maven/) |
 
-The former `reqCover.requirementsUri` (singular) setting has been removed; using it fails the build.
+## Settings
 
-## TestNG
-Add `reqcover-engine-testng` and a requirements source (for example `reqcover-source-openapi`) to the test classpath.
-The listener registers itself automatically; no `@Listeners` annotation or `testng.xml` entry is needed.
-
-ReqCover is configured through JVM system properties or `testng.xml` suite parameters:
-
-| Setting | Description | Default |
+| Setting | Meaning | Default |
 |---|---|---|
-| `reqCover.requirementsUris` | Comma-separated classpath locations of the requirements specifications | none (a warning is logged) |
-| `reqCover.minimumRequiredCoveragePercent` | Minimum required requirements coverage in percent | `0.0` |
-| `reqCover.failIfBelowMinimum` | Whether to fail the build if the coverage is below the minimum | `true` |
-| `reqCover.reportsDir` | Directory for the HTML and XML reports, relative to the working directory | `build/reports/tests/reqcover` |
+| `reqCover.requirementsUris` | Comma-separated classpath locations of the requirements files | none: a warning is logged and no requirements are expected |
+| `reqCover.minimumRequiredCoveragePercent` | Minimum coverage in percent, a number from 0 to 100 | `0.0` |
+| `reqCover.failIfBelowMinimum` | Fail the build below the minimum (`true` or `false`) | `true` |
+| `reqCover.reportsDir` | Directory for the HTML and XML reports | `build/reports/tests/reqcover` |
+| `reqCover.cucumber.tagPrefix` | Cucumber only: prefix of requirement tags | `@req:` |
 
-Gradle:
-```kotlin
-tasks.test {
-    useTestNG()
-    systemProperty("reqCover.requirementsUris", "requirements.yaml")
-    systemProperty("reqCover.minimumRequiredCoveragePercent", "100")
-}
-```
+A JVM system property always wins; otherwise the framework's own configuration is used (`junit-platform.properties`, `testng.xml` or `cucumber.properties`).
+A missing or malformed requirements file, or an invalid setting value, fails the build with an error.
+Details: [Configuration](https://reqcover.dev/configuration/) and [Troubleshooting](https://reqcover.dev/troubleshooting/).
 
-Maven Surefire:
-```xml
-<plugin>
-    <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-surefire-plugin</artifactId>
-    <configuration>
-        <systemPropertyVariables>
-            <reqCover.requirementsUris>requirements.yaml</reqCover.requirementsUris>
-            <reqCover.minimumRequiredCoveragePercent>100</reqCover.minimumRequiredCoveragePercent>
-            <reqCover.reportsDir>${project.build.directory}/reqcover</reqCover.reportsDir>
-        </systemPropertyVariables>
-    </configuration>
-</plugin>
-```
+## Modules
 
-`testng.xml`:
-```xml
-<suite name="My suite">
-    <parameter name="reqCover.requirementsUris" value="requirements.yaml"/>
-    <parameter name="reqCover.minimumRequiredCoveragePercent" value="100"/>
-    ...
-</suite>
-```
-
-With several suites, `reqCover.reportsDir` is taken from the first suite that sets it, the requirements URIs of all suites are combined, and the strictest coverage settings apply: the highest minimum, and the build fails if any suite asks for that (a suite that does not set `reqCover.failIfBelowMinimum` counts as `true`).
-This rule is provisional and may change based on user feedback.
-
-Annotate TestNG tests with `@ForRequirement` exactly as with JUnit; only passing tests count as verifying their requirements.
-
-## Cucumber
-Add `reqcover-engine-cucumber` and a requirements source to the test classpath.
-ReqCover works with Cucumber 7 and 8 and uses your project's Cucumber version.
-
-Register the plugin and configure ReqCover in `junit-platform.properties` (when running Cucumber on the JUnit Platform) or `cucumber.properties`:
-```properties
-cucumber.plugin=dev.reqcover.cucumber.RequirementsCoverageListener
-reqCover.requirementsUris=requirements.yaml
-reqCover.minimumRequiredCoveragePercent=100
-```
-
-Link a scenario to a requirement with a tag. A passing scenario covers every requirement it is tagged with; tags on the feature or rule apply to all its scenarios.
-```gherkin
-Feature: Users
-
-  @req:#getUsers/200
-  Scenario: list users
-    ...
-```
-
-| Setting | Description | Default |
-|---|---|---|
-| `reqCover.cucumber.tagPrefix` | Prefix of the tags that name a requirement; the rest of the tag is the requirement ID | `@req:` |
-| `reqCover.requirementsUris` | Comma-separated classpath locations of the requirements specifications | none (a warning is logged) |
-| `reqCover.minimumRequiredCoveragePercent` | Minimum required requirements coverage in percent | `0.0` |
-| `reqCover.failIfBelowMinimum` | Whether to fail the build if the coverage is below the minimum | `true` |
-| `reqCover.reportsDir` | Directory for the HTML and XML reports, relative to the working directory | `build/reports/tests/reqcover` |
-
-## When a requirement counts as covered
-A requirement is covered when at least one test annotated with `@ForRequirement` for it passes.
-For Cucumber, a passing scenario covers the requirements of its tags.
-A requirement on a test class (JUnit, TestNG) is covered when at least one test in the class passes.
-For parameterized, repeated (`@RepeatedTest`) and data-provider tests, and for the dynamic tests of a `@TestFactory`, one passing run is enough; failing, skipped and aborted runs do not count.
-This rule is provisional and may change based on user feedback.
-
-## Configuration precedence
-Every ReqCover setting (`reqCover.requirementsUris`, `reqCover.minimumRequiredCoveragePercent`, `reqCover.failIfBelowMinimum`, `reqCover.reportsDir`, and for Cucumber `reqCover.cucumber.tagPrefix`) is looked up in this order; the first place that sets it wins:
-
-| Order | JUnit 5 Jupiter | TestNG | Cucumber |
-|---|---|---|---|
-| 1 | JVM system property (`-DreqCover.…`) | JVM system property (`-DreqCover.…`) | JVM system property (`-DreqCover.…`) |
-| 2 | JUnit configuration parameter (`junit-platform.properties`, launcher or build tool configuration) | `testng.xml` suite `<parameter>` | `cucumber.properties` |
-| 3 | Built-in default | Built-in default | `junit-platform.properties` |
-| 4 | | | Built-in default |
-
-## Requirements file and setting problems
-These rules apply to JUnit, TestNG and Cucumber alike:
-
-| Situation | Behaviour |
+| Module | Purpose |
 |---|---|
-| A requirements file is not found | Error, the build fails |
-| A requirements file is malformed or not a supported format | Error, the build fails |
-| `reqCover.requirementsUris` is not set or is empty | Warning, coverage is not checked |
-| A requirements file contains no requirements (e.g. OpenAPI `paths: {}`) | Warning, the file counts as fully covered |
-| `reqCover.minimumRequiredCoveragePercent` is not a number from 0 to 100, or `reqCover.failIfBelowMinimum` is not `true`/`false` | Error after the report is written, the build fails |
+| `reqcover-engine-junit-jupiter` | JUnit Jupiter listener (JUnit 5 and 6), registers itself |
+| `reqcover-engine-testng` | TestNG listener, registers itself |
+| `reqcover-engine-cucumber` | Cucumber plugin (Cucumber 7 and 8) |
+| `reqcover-source-openapi` | Reads requirements from OpenAPI documents |
+| `reqcover-reporter-html`, `reqcover-reporter-xml` | Write the coverage report |
+| `reqcover-core`, `reqcover-engine` | The `@ForRequirement` annotation and the shared engine with its extension points for [sources](https://reqcover.dev/sources/) and [reporters](https://reqcover.dev/reporters/) |
 
-The two warning cases are provisional and may change based on user feedback.
-If you have an opinion, please comment on https://github.com/reqcover/reqcover/issues.
-
-## Glossary
-* **Requirement** - a piece of functionality that should be implemented in the system
-* **Test case** - a piece of code that tests a requirement
-* **Coverage** - a set of test cases that cover a requirement
-* **expectedRequirements** - a set of requirements that should be verified by a test case
-* **verifiedRequirements** - a set of requirements that are verified by a test case
-
-## Sponsors
-This project is sponsored by:
-* eSol GmbH - https://www.esol.de
-* Nelkinda Software Craft Pvt Ltd - https://nelkinda.com
+All modules have the group `dev.reqcover`. Maven users add the `-jvm` suffix to the artifact name.
 
 ## Contributing
+
 Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
-To report a security problem, see [SECURITY.md](SECURITY.md).
+Build and test with `make`. To report a security problem, see [SECURITY.md](SECURITY.md).
+
+## Sponsors
+
+ReqCover is sponsored by [eSol GmbH](https://www.esol.de/) and [Nelkinda Software Craft Pvt Ltd](https://nelkinda.com/).
 
 ## License
+
 ReqCover is licensed under the BSD 3-Clause License; see [LICENSE](LICENSE).
