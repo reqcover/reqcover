@@ -142,4 +142,85 @@ class OpenApiRequirementsSourceTest {
     fun `the engine reports a non-OpenAPI file as an unsupported format`() {
         assertFailsWith<UnsupportedFormat> { loadRequirements("not-openapi.yaml") }
     }
+
+    private fun printedWhile(action: () -> Unit): String {
+        val original = System.out
+        val captured = java.io.ByteArrayOutputStream()
+        System.setOut(java.io.PrintStream(captured, true))
+        try {
+            action()
+        } finally {
+            System.setOut(original)
+        }
+        return captured.toString()
+    }
+
+    @Test
+    fun `path-level fields that are not operations are ignored without a warning`() {
+        lateinit var requirements: Set<String>
+        val output = printedWhile {
+            requirements = OpenApiRequirementsSource().loadOpenApiRequirementsFromString(
+                """
+                openapi: 3.0.0
+                info:
+                  title: Test API
+                  version: 1.0.0
+                paths:
+                  /users/{id}:
+                    summary: A single user
+                    description: Everything about one user
+                    servers:
+                      - url: https://example.com
+                    parameters:
+                      - name: id
+                        in: path
+                        required: true
+                    x-internal: true
+                    get:
+                      operationId: getUser
+                      responses:
+                        '200':
+                          description: OK
+                """.trimIndent()
+            )
+        }
+
+        assertEquals(setOf("#getUser/200"), requirements)
+        assertEquals("", output)
+    }
+
+    @Test
+    fun `every HTTP method is an operation`() {
+        val methods = listOf("get", "put", "post", "delete", "options", "head", "patch", "trace")
+        val requirements = OpenApiRequirementsSource().loadOpenApiRequirementsFromString(
+            "openapi: 3.0.0\ninfo:\n  title: Test API\n  version: 1.0.0\npaths:\n  /x:\n" +
+                methods.joinToString("") { "    $it:\n      operationId: ${it}Op\n" }
+        )
+
+        assertEquals(methods.map { "#${it}Op" }.toSet(), requirements)
+    }
+
+    @Test
+    fun `an operation without operationId is skipped with a warning`() {
+        lateinit var requirements: Set<String>
+        val output = printedWhile {
+            requirements = OpenApiRequirementsSource().loadOpenApiRequirementsFromString(
+                """
+                openapi: 3.0.0
+                info:
+                  title: Test API
+                  version: 1.0.0
+                paths:
+                  /users:
+                    get:
+                      responses:
+                        '200':
+                          description: OK
+                """.trimIndent()
+            )
+        }
+
+        assertEquals(emptySet(), requirements)
+        assertEquals("Warning: Operation ID not found for path '/users' and method 'get'.", output.trim())
+    }
 }

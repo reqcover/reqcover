@@ -29,7 +29,7 @@ class OpenApiRequirementsSource : JvmRequirementsSource {
         val setOfRequirements = mutableSetOf<String>()
         val pathsNode = requireNotNull(root.get("paths")) { "Not an OpenAPI document: no 'paths' found." }
         for ((rawPath, pathItem) in pathsNode.properties()) {
-            for ((method, opNode) in pathItem.properties()) {
+            for ((method, opNode) in pathItem.properties().filter { (key, _) -> key in HTTP_METHODS }) {
                 val operationId = opNode.get("operationId")?.asString()
                 if (operationId == null) {
                     println("Warning: Operation ID not found for path '$rawPath' and method '$method'.")
@@ -49,6 +49,10 @@ class OpenApiRequirementsSource : JvmRequirementsSource {
             }
         }
         return setOfRequirements
+    }
+
+    private companion object {
+        val HTTP_METHODS = setOf("get", "put", "post", "delete", "options", "head", "patch", "trace")
     }
 
     fun escapeJsonPointer(segment: String): String =
