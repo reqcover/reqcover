@@ -1,5 +1,5 @@
 [versions]
-algp = "9.5.1"
+algp = "9.5.3"
 axion-release = "1.21.4"
 cucumber = "8.1.0"
 jackson = "3.3.0"
