@@ -1,6 +1,6 @@
 [versions]
 algp = "9.5.1"
-axion-release = "1.21.4"
+axion-release = "1.21.5"
 cucumber = "8.1.0"
 jackson = "3.3.0"
 junit-jupiter = "6.1.3"
